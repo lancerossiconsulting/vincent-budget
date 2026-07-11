@@ -48,10 +48,12 @@ The worksheet contains an **opt-in** status light: when Vincent & Kayla switch o
 green / amber / red plus percentages — to a small shared status slot, and Lance's Command
 Deck shows it as an indicator in the finance rail. No emails, no messages.
 
-**The plumbing:** the status slot is a kvdb.io bucket
-(`https://kvdb.io/T1SxHa1r126cVFmn4NUSEB/vincent-status`) registered to Lance's email.
-Writes only work after the bucket's one-time email verification (kvdb sends the link when
-the bucket is created). The worksheet PUTs a JSON payload there; the deck GETs it.
+**The plumbing:** the status slot is an anonymous JSON bin
+(`https://extendsclass.com/api/json-storage/bin/bfaebdd`) — no account, no verification,
+nothing to maintain. The worksheet PUTs a JSON payload there; the deck GETs it. If the bin
+ever disappears (free service, kept alive by the deck's regular reads), the deck simply shows
+"no report"; recreate with `curl -X POST https://extendsclass.com/api/json-storage/bin -H
+"Content-Type: application/json" -d '{}'` and update the URL here and in the deck.
 
 **How it behaves:**
 - **Off by default.** Nothing is published unless they turn the toggle on; turning it off stops
