@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance It vs. Save For It — Vincent's Budget Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F5;--card:#FBFCFD;--ink:#16202E;--ink-soft:#48566A;--line:#D6DCE4;
+    --keep:#2E6E4E;--keep-soft:#E2EFE8;--fixed:#36567C;--fixed-soft:#E3EAF2;
+    --flex:#7A6A52;--flex-soft:#EEEAE2;--alert:#B5612E;--alert-soft:#F5E6D8;
+    --over:#A6362E;--over-soft:#F6E1DF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;padding:clamp(12px,4vw,40px);font-size:15px}
+  .sheet{max-width:820px;margin:0 auto}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+  .back{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--ink-soft);text-decoration:none;display:inline-block;margin-bottom:14px}
+  .back:hover{color:var(--ink)}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+  .eyebrow{font-family:"Archivo",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
+  h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:clamp(24px,5.5vw,34px);line-height:1.06;letter-spacing:-0.02em;margin-bottom:10px}
+  .lede{font-size:14px;color:var(--ink-soft);max-width:62ch}
+
+  section{margin-top:26px}
+  .shead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .shead .k{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;color:#fff;border-radius:5px;padding:4px 9px;letter-spacing:.1em}
+  .k.a{background:var(--alert)} .k.g{background:var(--keep)} .k.b{background:var(--fixed)}
+  .shead h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .col h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:14px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .col.fin h3{color:var(--alert)} .col.sav h3{color:var(--keep)}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
+  .field input{width:100%;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--ink);text-align:right}
+  .field input:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+  .field .hint{font-size:11px;color:#8894A4;margin-top:3px}
+
+  .results{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:640px){.results{grid-template-columns:1fr}}
+  .rcard{border-radius:12px;padding:16px 18px}
+  .rcard.fin{background:var(--alert-soft);border:1px solid #E3C7AC}
+  .rcard.sav{background:var(--keep-soft);border:1px solid #BED8C9}
+  .rcard h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+  .rcard.fin h4{color:var(--alert)} .rcard.sav h4{color:var(--keep)}
+  .rline{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:4px 0}
+  .rline .v{font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .rline.big{border-top:1px solid rgba(22,32,46,.15);margin-top:6px;padding-top:9px;font-weight:700}
+  .rline.big .v{font-size:17px}
+  .rcard.fin .rline.big .v{color:var(--over)} .rcard.sav .rline.big .v{color:var(--keep)}
+
+  .verdict{background:var(--ink);color:#fff;border-radius:14px;padding:18px 20px;margin-top:16px;font-size:14px;line-height:1.6}
+  .verdict b{color:#7FD3A2}
+  .verdict .warn{color:#F0A39B}
+  .verdict .pill{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;letter-spacing:.08em;padding:4px 11px;border-radius:99px;background:#3a4a5e;color:#cdd7e3;display:inline-block;margin-bottom:8px}
+
+  .incrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .incrow label{font-size:13px;color:var(--ink-soft);font-weight:600}
+  input.inc{font-family:"IBM Plex Mono",monospace;font-size:16px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--ink);width:150px;text-align:right;font-weight:600}
+  input.inc:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  thead th{font-family:"Archivo",sans-serif;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)}
+  thead th.l{text-align:left}
+  tbody td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:13.5px}
+  tbody td.l{text-align:left;font-weight:600}
+  tbody td .why{display:block;font-weight:400;font-size:11.5px;color:#8894A4}
+  tbody tr:last-child td{border-bottom:none}
+  td.pct{font-family:"IBM Plex Mono",monospace;color:var(--ink-soft);font-size:12.5px}
+  td.dollars{font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .guide-note{font-size:12.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
+
+  .foot{margin-top:28px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <a class="back" href="index.html">← Back to the toolkit</a>
+  <header>
+    <div class="eyebrow">Decision Helper · Calculator</div>
+    <h1>Finance It vs. Save For It</h1>
+    <p class="lede">Before signing a payment plan, run the numbers both ways: what the financing
+      really costs over its life, and how long it would take to just save up and pay cash.
+      Then check the spending guide below to see what your income comfortably supports.</p>
+  </header>
+
+  <section>
+    <div class="shead"><span class="k b">Compare</span><h2>The purchase, both ways</h2></div>
+    <div class="panel">
+      <div class="field" style="max-width:260px">
+        <label for="price">Price of the thing ($)</label>
+        <input id="price" inputmode="decimal" placeholder="0" data-k="price">
+      </div>
+      <div class="grid2">
+        <div class="col fin">
+          <h3>Option A — Finance it</h3>
+          <div class="field"><label for="apr">Interest rate (APR %)</label>
+            <input id="apr" inputmode="decimal" placeholder="e.g. 9.5" data-k="apr">
+            <div class="hint">Store cards often run 25–30% — check the fine print</div></div>
+          <div class="field"><label for="term">Loan length (months)</label>
+            <input id="term" inputmode="numeric" placeholder="e.g. 36" data-k="term"></div>
+        </div>
+        <div class="col sav">
+          <h3>Option B — Save for it</h3>
+          <div class="field"><label for="monthly">You can set aside each month ($)</label>
+            <input id="monthly" inputmode="decimal" placeholder="e.g. 200" data-k="monthly"></div>
+          <div class="field"><label for="apy">Savings interest (APY %)</label>
+            <input id="apy" inputmode="decimal" placeholder="e.g. 4.0" data-k="apy">
+            <div class="hint">High-yield savings accounts pay ~4%; regular ones near 0</div></div>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="rcard fin">
+          <h4>If you finance</h4>
+          <div class="rline"><span>Monthly payment</span><span class="v" id="r-pay">—</span></div>
+          <div class="rline"><span>Total of all payments</span><span class="v" id="r-total">—</span></div>
+          <div class="rline big"><span>Extra paid in interest</span><span class="v" id="r-int">—</span></div>
+        </div>
+        <div class="rcard sav">
+          <h4>If you save first</h4>
+          <div class="rline"><span>Time until you can pay cash</span><span class="v" id="r-months">—</span></div>
+          <div class="rline"><span>Total you deposit</span><span class="v" id="r-dep">—</span></div>
+          <div class="rline big"><span>Interest you EARN meanwhile</span><span class="v" id="r-earn">—</span></div>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict">
+        <span class="pill">Fill in the numbers</span><br>
+        Enter a price, then the loan terms on the left and your monthly set-aside on the right.
+        The comparison appears here.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="k g">Guide</span><h2>What your income suggests, by category</h2></div>
+    <div class="panel">
+      <div class="incrow">
+        <label for="ginc">Monthly income after taxes</label>
+        <input class="inc" id="ginc" inputmode="decimal" placeholder="0" data-k="ginc">
+      </div>
+      <table>
+        <thead><tr><th class="l">Category</th><th>Guideline</th><th>For your income</th></tr></thead>
+        <tbody id="guide-body"></tbody>
+      </table>
+      <p class="guide-note">These are guardrails, not rules — every family lands differently. If one
+        category runs high (housing usually does early on), pull another down so the whole plan still
+        fits. The one to protect: <b>savings never goes to zero.</b> Use these ranges to sanity-check
+        the targets you set in the <a href="worksheet.html">worksheet</a>.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    Everything you type stays in your browser — nothing is uploaded. Planning aid, not financial advice.
+    Loan math assumes a standard fixed-rate installment loan; deferred-interest and “same as cash” offers
+    can behave much worse if a payment is missed.
+  </div>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const parse = v => { const n = parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; };
+  const money = n => (n<0?"-$":"$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+
+  // ---- persistence (localStorage, in-memory fallback) ----
+  const KEY="vbud:calc:v1"; const mem={};
+  function load(){ try{ return JSON.parse(window.localStorage.getItem(KEY)||"{}"); }catch(e){ return mem; } }
+  function save(d){ try{ window.localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){ Object.assign(mem,d); } }
+  let vals = load();
+
+  // ---- finance vs save ----
+  function monthsLabel(m){
+    if(m===Infinity) return "never at that rate";
+    const y=Math.floor(m/12), r=m%12;
+    if(y===0) return m+" month"+(m===1?"":"s");
+    return y+" yr"+(y>1?"s":"")+(r? " "+r+" mo":"");
+  }
+
+  function computeCompare(){
+    const P=parse(vals.price), apr=parse(vals.apr), n=Math.round(parse(vals.term));
+    const m=parse(vals.monthly), apy=parse(vals.apy);
+
+    // Option A: fixed-rate installment loan
+    let pay=0,total=0,interest=0,finOk=false;
+    if(P>0 && n>0){
+      const i=apr/100/12;
+      pay = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n;
+      total=pay*n; interest=total-P; finOk=true;
+    }
+    $("#r-pay").textContent   = finOk?money(pay):"—";
+    $("#r-total").textContent = finOk?money(total):"—";
+    $("#r-int").textContent   = finOk?money(interest):"—";
+
+    // Option B: deposit monthly until balance reaches P (month-by-month)
+    let months=0,dep=0,earned=0,savOk=false;
+    if(P>0 && m>0){
+      const j=apy/100/12; let bal=0;
+      while(bal<P && months<600){ bal=bal*(1+j)+m; dep+=m; months++; }
+      if(bal>=P){ earned=bal-dep; savOk=true; } else { months=Infinity; }
+    }
+    $("#r-months").textContent = (P>0&&m>0) ? monthsLabel(months) : "—";
+    $("#r-dep").textContent    = savOk?money(dep):"—";
+    $("#r-earn").textContent   = savOk?money(earned):"—";
+
+    const v=$("#verdict");
+    if(finOk && savOk){
+      const swing = interest + earned;
+      v.innerHTML =
+        '<span class="pill">The comparison</span><br>'+
+        'Financing means paying <span class="warn">'+money(interest)+' extra</span> in interest ('+
+        money(pay)+'/mo for '+n+' months). Saving first takes <b>'+monthsLabel(months)+'</b> of waiting, '+
+        'but you keep that interest <i>and</i> earn <b>'+money(earned)+'</b> while you wait — a total swing of '+
+        '<b>'+money(swing)+'</b> in your favor. '+
+        (interest<=0 ? 'At 0% financing the math is even — then the question is whether the payment fits your monthly budget.' :
+        'If you don’t need it right now, waiting is the cheaper path. If you do need it now, at least you know exactly what the convenience costs.');
+    } else if(finOk && P>0 && m>0 && months===Infinity){
+      v.innerHTML='<span class="pill">Heads up</span><br>At that monthly set-aside this would take over 50 years to save — either the set-aside needs to grow or the purchase may be out of reach for now.';
+    } else if(finOk){
+      v.innerHTML='<span class="pill">Almost there</span><br>Loan side is done — now enter what you could set aside monthly to see the save-first path.';
+    } else if(savOk){
+      v.innerHTML='<span class="pill">Almost there</span><br>Savings side is done — now enter the loan’s rate and length to see what financing costs.';
+    } else {
+      v.innerHTML='<span class="pill">Fill in the numbers</span><br>Enter a price, then the loan terms on the left and your monthly set-aside on the right. The comparison appears here.';
+    }
+  }
+
+  // ---- spending guide ----
+  const GUIDE=[
+    {cat:"Housing", why:"rent/mortgage + utilities", lo:25, hi:35},
+    {cat:"Transportation", why:"car payment, gas, insurance, upkeep", lo:10, hi:15},
+    {cat:"Food", why:"groceries + eating out", lo:10, hi:15},
+    {cat:"Insurance & healthcare", why:"health, life, out-of-pocket", lo:5, hi:10},
+    {cat:"Savings & emergency fund", why:"pay yourself first", lo:10, hi:20},
+    {cat:"Kids & baby", why:"diapers, clothes, childcare extras", lo:5, hi:10},
+    {cat:"Debt payoff", why:"beyond minimum payments", lo:0, hi:10},
+    {cat:"Personal & fun", why:"the budget you don’t feel guilty about", lo:5, hi:10},
+    {cat:"Giving", why:"church, causes, generosity", lo:0, hi:10},
+  ];
+  function renderGuide(){
+    const inc=parse(vals.ginc);
+    $("#guide-body").innerHTML = GUIDE.map(g=>{
+      const d = inc>0 ? '<span class="num">'+money(inc*g.lo/100)+' – '+money(inc*g.hi/100)+'</span>' : '<span style="color:#B3BCC7">enter income ↑</span>';
+      return '<tr><td class="l">'+g.cat+'<span class="why">'+g.why+'</span></td>'+
+             '<td class="pct">'+g.lo+'–'+g.hi+'%</td><td class="dollars">'+d+'</td></tr>';
+    }).join("");
+  }
+
+  // ---- wire up ----
+  document.addEventListener("input", e=>{
+    const k=e.target.dataset && e.target.dataset.k;
+    if(!k) return;
+    vals[k]=e.target.value; save(vals);
+    if(k==="ginc") renderGuide(); else computeCompare();
+  });
+  (function init(){
+    for(const k of ["price","apr","term","monthly","apy","ginc"]){
+      const el=document.querySelector('[data-k="'+k+'"]');
+      if(el && vals[k]!=null) el.value=vals[k];
+    }
+    computeCompare(); renderGuide();
+  })();
+</script>
+</body>
+</html>

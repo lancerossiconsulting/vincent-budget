@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Worksheet — Vincent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F5;--card:#FBFCFD;--ink:#16202E;--ink-soft:#48566A;--line:#D6DCE4;
+    --keep:#2E6E4E;--keep-soft:#E2EFE8;--fixed:#36567C;--fixed-soft:#E3EAF2;
+    --flex:#7A6A52;--flex-soft:#EEEAE2;--alert:#B5612E;--alert-soft:#F5E6D8;
+    --over:#A6362E;--over-soft:#F6E1DF;--under:#2E6E4E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;padding:clamp(12px,4vw,40px);font-size:15px}
+  .sheet{max-width:820px;margin:0 auto}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:20px}
+  .eyebrow{font-family:"Archivo",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
+  h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:clamp(24px,5.5vw,36px);line-height:1.04;letter-spacing:-0.02em;margin-bottom:12px}
+  .lede{font-size:14px;color:var(--ink-soft);max-width:60ch}
+  .incrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+  .incrow label{font-size:13px;color:var(--ink-soft);font-weight:600}
+  input.inc{font-family:"IBM Plex Mono",monospace;font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--ink);width:140px;text-align:right;font-weight:600}
+  input.inc:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+
+  .how{background:var(--fixed-soft);border:1px solid #C6D3E4;border-radius:12px;padding:14px 16px;margin-top:18px;font-size:13.5px;color:#26364A}
+  .how b{color:var(--fixed)}
+  .how ol{margin:8px 0 0 18px;padding:0}
+  .how li{margin:3px 0}
+
+  section{margin-top:24px}
+  .shead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .shead .k{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;color:#fff;border-radius:5px;padding:4px 9px;letter-spacing:.1em}
+  .k.f{background:var(--fixed)}.k.s{background:var(--keep)}.k.x{background:var(--flex)}
+  .shead h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em}
+  .shead .sub{margin-left:auto;font-size:12px;color:var(--ink-soft);text-align:right}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  thead th{font-family:"Archivo",sans-serif;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);text-align:right;padding:9px 10px;border-bottom:1px solid var(--line)}
+  thead th.l{text-align:left}
+  thead th.x{width:34px;padding:9px 6px}
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  tbody td.l{text-align:left}
+  tbody tr:last-child td{border-bottom:none}
+  input.cat{width:100%;min-width:96px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 8px;color:var(--ink)}
+  input.cat:hover{border-color:var(--line)}
+  input.cat:focus{outline:none;background:#fff;border-color:var(--fixed)}
+  input.cat::placeholder{color:#9AA6B4;font-style:italic}
+  input.amt{width:88px;text-align:right;font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:7px;padding:7px 9px;color:var(--ink)}
+  input.amt.tgt{background:var(--flex-soft);border-color:#DDD5C7}
+  input.amt:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+  input.amt::placeholder{color:#B3BCC7;font-weight:400}
+  td.diff{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+  .v-under{color:var(--under)}.v-over{color:var(--over)}.v-zero{color:#9AA6B4}
+  button.del{background:transparent;border:none;color:#B3BCC7;font-size:15px;cursor:pointer;padding:4px 6px;border-radius:6px;line-height:1}
+  button.del:hover{color:var(--over);background:var(--over-soft)}
+  tr.totrow{background:var(--flex-soft)}
+  tr.totrow td{font-weight:700;border-top:2px solid var(--flex);font-family:"IBM Plex Mono",monospace}
+  tr.totrow td.l{font-family:"Archivo",sans-serif}
+  tr.totrow.f{background:var(--fixed-soft)}tr.totrow.f td{border-top-color:var(--fixed)}
+  tr.totrow.s{background:var(--keep-soft)}tr.totrow.s td{border-top-color:var(--keep)}
+
+  .addrow{margin-top:8px}
+  button.add{font-family:"Archivo",sans-serif;font-weight:600;font-size:12.5px;border:1px dashed var(--line);background:transparent;color:var(--ink-soft);border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s}
+  button.add:hover{border-color:var(--ink-soft);color:var(--ink);background:var(--card)}
+
+  .summary{background:var(--ink);color:#fff;border-radius:14px;padding:20px;margin-top:28px}
+  .summary h2{font-family:"Archivo",sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:#AEB9C7;margin-bottom:16px}
+  .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:560px){.sgrid{grid-template-columns:1fr 1fr}}
+  .scell .lab{font-size:10.5px;color:#AEB9C7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+  .scell .val{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:clamp(18px,4.4vw,24px);letter-spacing:-0.02em}
+  .val.good{color:#7FD3A2}.val.bad{color:#F0A39B}
+  .verdict{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);font-size:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .pill{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;letter-spacing:.08em;padding:5px 11px;border-radius:99px}
+  .pill.ok{background:var(--keep);color:#fff}.pill.def{background:var(--over);color:#fff}
+  .verdict .txt{color:#D5DCE6}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  button.ctl{font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:11px 16px;cursor:pointer;transition:.15s}
+  button.ctl:hover{background:#fff;border-color:var(--ink-soft)}
+  button.ctl.primary{background:var(--keep);color:#fff;border-color:var(--keep)}
+  button.ctl.primary:hover{background:#27603f}
+
+  .foot{margin-top:22px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div class="eyebrow">Budget Setup · Worksheet</div>
+    <h1>Vincent's Budget Worksheet</h1>
+    <p class="lede">A starting scaffold — the category names are just suggestions, so rename, add, or
+      delete anything. Set a <b>target</b> for each line (what you plan to spend), then fill in the
+      <b>actual</b> as the month goes. Everything saves as you type.</p>
+    <div class="incrow">
+      <label for="income">Monthly income after taxes</label>
+      <input class="inc" id="income" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="how">
+      <b>How this works</b>
+      <ol>
+        <li>Rename the categories to match your life, and add any that are missing.</li>
+        <li>Put a <b>target</b> next to each — your best guess at a monthly number.</li>
+        <li>Fill in <b>actuals</b> as you spend. The worksheet shows where you're over or under.</li>
+        <li>When it's filled in, tap <b>Copy summary</b> and send it back — your own live tool gets built from these numbers.</li>
+      </ol>
+    </div>
+  </header>
+
+  <section>
+    <div class="shead"><span class="k f">Committed</span><h2>Bills that are the same every month</h2>
+      <span class="sub">rent, car, insurance, phone…</span></div>
+    <table>
+      <thead><tr><th class="l">Expense</th><th>Target</th><th>Actual</th><th>Left</th><th class="x"></th></tr></thead>
+      <tbody id="tb-committed"></tbody>
+      <tfoot><tr class="totrow f"><td class="l">Committed total</td><td data-tot="committed-t">$0</td><td data-tot="committed-a">$0</td><td></td><td></td></tr></tfoot>
+    </table>
+    <div class="addrow"><button class="add" data-add="committed">+ Add a committed bill</button></div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="k s">Savings</span><h2>Pay yourself first</h2>
+      <span class="sub">treat it like a bill</span></div>
+    <table>
+      <thead><tr><th class="l">Goal</th><th>Target</th><th>Actual</th><th>Diff</th><th class="x"></th></tr></thead>
+      <tbody id="tb-savings"></tbody>
+      <tfoot><tr class="totrow s"><td class="l">Savings total</td><td data-tot="savings-t">$0</td><td data-tot="savings-a">$0</td><td></td><td></td></tr></tfoot>
+    </table>
+    <div class="addrow"><button class="add" data-add="savings">+ Add a savings goal</button></div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="k x">Variable</span><h2>Spending that moves month to month</h2>
+      <span class="sub">yours to define</span></div>
+    <table>
+      <thead><tr><th class="l">Expense</th><th>Target</th><th>Actual</th><th>Left</th><th class="x"></th></tr></thead>
+      <tbody id="tb-variable"></tbody>
+      <tfoot><tr class="totrow x"><td class="l">Variable total</td><td data-tot="variable-t">$0</td><td data-tot="variable-a">$0</td><td></td><td></td></tr></tfoot>
+    </table>
+    <div class="addrow"><button class="add" data-add="variable">+ Add a variable expense</button></div>
+  </section>
+
+  <div class="summary">
+    <h2>The Math</h2>
+    <div class="sgrid">
+      <div class="scell"><div class="lab">Income</div><div class="val" id="s-income">$0</div></div>
+      <div class="scell"><div class="lab">Planned (targets)</div><div class="val" id="s-plan">$0</div></div>
+      <div class="scell"><div class="lab">Plan vs income</div><div class="val" id="s-bal">$0</div></div>
+      <div class="scell"><div class="lab">Spent (actuals)</div><div class="val" id="s-spent">$0</div></div>
+      <div class="scell"><div class="lab">Left this month</div><div class="val" id="s-left">$0</div></div>
+      <div class="scell"><div class="lab">Lines filled</div><div class="val" id="s-count">0</div></div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctl primary" id="copy-btn">Copy summary to send back</button>
+    <button class="ctl" id="reset-btn">Reset worksheet</button>
+  </div>
+
+  <div class="foot">
+    Everything you type is saved on this device only — nothing is shared until you tap
+    <b>Copy summary</b> and send it. The <b>target</b> boxes are shaded; the <b>actual</b> boxes are white.
+    Not financial advice — a planning worksheet to get your numbers in one place.
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const parse = v => { const n = parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; };
+  const money = n => (n<0?"-$":"$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+  const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  // ---- storage (localStorage, in-memory fallback for private browsing) ----
+  const mem = {};
+  async function sGet(k){ try{ return window.localStorage.getItem(k); }catch(e){} return (k in mem)?mem[k]:null; }
+  async function sSet(k,v){ try{ window.localStorage.setItem(k,v); return; }catch(e){} mem[k]=v; }
+
+  const KEY = "vbud:data:v1";
+  const GROUPS = ["committed","savings","variable"];
+
+  const DEFAULT = {
+    income:"",
+    committed:[
+      {name:"Rent / housing",target:"",actual:""},
+      {name:"Car payment",target:"",actual:""},
+      {name:"Car insurance",target:"",actual:""},
+      {name:"Phone",target:"",actual:""},
+      {name:"Internet",target:"",actual:""},
+      {name:"Electric / utilities",target:"",actual:""},
+    ],
+    savings:[ {name:"Savings",target:"",actual:""} ],
+    variable:[
+      {name:"Groceries",target:"",actual:""},
+      {name:"Gas",target:"",actual:""},
+      {name:"Dining / takeout",target:"",actual:""},
+      {name:"Household / supplies",target:"",actual:""},
+      {name:"Baby / kids",target:"",actual:""},
+      {name:"Personal",target:"",actual:""},
+      {name:"Subscriptions",target:"",actual:""},
+      {name:"Miscellaneous",target:"",actual:""},
+    ],
+  };
+
+  let state = null;
+
+  async function persist(){ await sSet(KEY, JSON.stringify(state)); }
+
+  function rowHtml(group,i,r){
+    const isSave = group==="savings";
+    return '<tr>'+
+      '<td class="l"><input class="cat" data-g="'+group+'" data-i="'+i+'" data-f="name" value="'+esc(r.name)+'" placeholder="Name this expense"></td>'+
+      '<td><input class="amt tgt" data-g="'+group+'" data-i="'+i+'" data-f="target" value="'+esc(r.target)+'" inputmode="decimal" placeholder="0"></td>'+
+      '<td><input class="amt" data-g="'+group+'" data-i="'+i+'" data-f="actual" value="'+esc(r.actual)+'" inputmode="decimal" placeholder="0"></td>'+
+      '<td class="diff v-zero" data-diff="'+group+'-'+i+'">—</td>'+
+      '<td><button class="del" data-del="'+group+'-'+i+'" title="Remove">&#10005;</button></td>'+
+    '</tr>';
+  }
+
+  function renderGroup(group){
+    const tb = $("#tb-"+group);
+    tb.innerHTML = state[group].map((r,i)=>rowHtml(group,i,r)).join("");
+  }
+  function renderAll(){ GROUPS.forEach(renderGroup); recompute(); }
+
+  function recompute(){
+    const income = parse(state.income);
+    let planned=0, spent=0, filled=0;
+    GROUPS.forEach(group=>{
+      let tSum=0,aSum=0;
+      state[group].forEach((r,i)=>{
+        const t=parse(r.target), a=parse(r.actual);
+        tSum+=t; aSum+=a;
+        if(String(r.name).trim() && (t||a)) filled++;
+        const cell=document.querySelector('[data-diff="'+group+'-'+i+'"]');
+        if(cell){
+          if(!t && !a){ cell.textContent="—"; cell.className="diff v-zero"; }
+          else {
+            const d = t - a; // how much of target is left
+            cell.textContent = (d<0?"-$":"$")+Math.abs(Math.round(d)).toLocaleString("en-US");
+            cell.className = "diff " + (a===0?"v-zero":(d<0?"v-over":"v-under"));
+          }
+        }
+      });
+      const tt=document.querySelector('[data-tot="'+group+'-t"]');
+      const ta=document.querySelector('[data-tot="'+group+'-a"]');
+      if(tt) tt.textContent=money(tSum);
+      if(ta) ta.textContent=money(aSum);
+      planned+=tSum; spent+=aSum;
+    });
+
+    const bal = income - planned;   // does the plan fit income?
+    const left = income - spent;    // how the actual month is going
+    $("#s-income").textContent = money(income);
+    $("#s-plan").textContent = money(planned);
+    const balEl=$("#s-bal"); balEl.textContent=money(bal); balEl.className="val "+(bal<0?"bad":"good");
+    $("#s-spent").textContent = money(spent);
+    const leftEl=$("#s-left"); leftEl.textContent=money(left); leftEl.className="val "+(left<0?"bad":"good");
+    $("#s-count").textContent = filled;
+
+    const v=$("#verdict");
+    if(!income && !planned){
+      v.innerHTML='<span class="pill" style="background:#3a4a5e;color:#cdd7e3">Start here</span><span class="txt">Fill in your income and a target for each line to see whether the plan balances.</span>';
+    } else if(bal < 0){
+      v.innerHTML='<span class="pill def">Over by '+money(-bal)+'</span><span class="txt">Your planned targets add up to more than your income. Trim a few targets until this reaches $0 or turns positive.</span>';
+    } else {
+      v.innerHTML='<span class="pill ok">Plan fits</span><span class="txt">Your targets fit inside your income with '+money(bal)+' unassigned. Give every dollar a job — even if it goes to savings.</span>';
+    }
+  }
+
+  // ---- events ----
+  document.addEventListener("input", e=>{
+    const el=e.target;
+    if(el.id==="income"){ state.income=el.value; recompute(); persist(); return; }
+    if(el.dataset && el.dataset.g!=null && el.dataset.i!=null && el.dataset.f){
+      const {g,i,f}=el.dataset;
+      state[g][+i][f]=el.value;
+      recompute(); persist();
+    }
+  });
+
+  document.addEventListener("click", e=>{
+    const add=e.target.closest("[data-add]");
+    if(add){ const g=add.dataset.add; state[g].push({name:"",target:"",actual:""}); renderGroup(g); recompute(); persist();
+      const tb=$("#tb-"+g); const last=tb.querySelector("tr:last-child input.cat"); if(last) last.focus(); return; }
+    const del=e.target.closest("[data-del]");
+    if(del){ const [g,i]=del.dataset.del.split("-"); state[g].splice(+i,1); renderGroup(g); recompute(); persist(); return; }
+  });
+
+  function summaryText(){
+    const income=parse(state.income);
+    let planned=0, spent=0;
+    const lines=[];
+    const label={committed:"COMMITTED",savings:"SAVINGS",variable:"VARIABLE"};
+    GROUPS.forEach(group=>{
+      const rows=state[group].filter(r=>String(r.name).trim() && (parse(r.target)||parse(r.actual)));
+      if(!rows.length) return;
+      lines.push(label[group]);
+      rows.forEach(r=>{
+        const t=parse(r.target), a=parse(r.actual);
+        planned+=t; spent+=a;
+        lines.push("  "+r.name+" — target "+money(t)+" / actual "+money(a));
+      });
+      lines.push("");
+    });
+    const out=[];
+    out.push("VINCENT — BUDGET WORKSHEET");
+    out.push("Income (after taxes): "+money(income));
+    out.push("");
+    out.push(...lines);
+    out.push("Planned out (targets): "+money(planned));
+    out.push("Actual out: "+money(spent));
+    out.push("Plan vs income: "+money(income-planned));
+    out.push("Left this month: "+money(income-spent));
+    return out.join("\n");
+  }
+
+  let toastT;
+  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+
+  $("#copy-btn").addEventListener("click", async ()=>{
+    const txt=summaryText();
+    try{ await navigator.clipboard.writeText(txt); toast("Summary copied — paste it into a message"); }
+    catch(e){
+      const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); toast("Summary copied — paste it into a message"); }
+      catch(_){ toast("Couldn't auto-copy — long-press to select"); }
+      document.body.removeChild(ta);
+    }
+  });
+
+  $("#reset-btn").addEventListener("click", async ()=>{
+    if(!confirm("Clear everything and start over from the suggested categories?")) return;
+    state=JSON.parse(JSON.stringify(DEFAULT));
+    $("#income").value="";
+    renderAll(); persist(); toast("Worksheet reset");
+  });
+
+  // ---- init ----
+  (async function(){
+    const raw=await sGet(KEY);
+    if(raw){ try{ state=JSON.parse(raw); }catch(e){ state=JSON.parse(JSON.stringify(DEFAULT)); } }
+    else state=JSON.parse(JSON.stringify(DEFAULT));
+    if(!state.committed) state.committed=[];
+    if(!state.savings) state.savings=[];
+    if(!state.variable) state.variable=[];
+    $("#income").value = state.income || "";
+    renderAll();
+  })();
+</script>
+</body>
+</html>
