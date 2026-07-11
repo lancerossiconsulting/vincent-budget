@@ -181,18 +181,18 @@
     works offline once loaded.</p>
 
   <div class="share" id="sharebox" hidden>
-    <label><input type="checkbox" id="share-toggle"> Share check-ins with Papa</label>
-    <p>Optional, and off unless you turn it on. When it's on and a month starts looking stretched,
-      Papa automatically gets a short note saying so — <b>percentages only</b> (like &ldquo;the plan uses 97%
-      of income&rdquo;), never your dollar amounts, categories, or line items. Nothing is sent while things
-      look comfortable. Switch it off any time and nothing more goes out.</p>
+    <label><input type="checkbox" id="share-toggle"> Turn on Papa's status light</label>
+    <p>Optional, and off unless you turn it on. When it's on, a small light on Papa's dashboard
+      shows how your month is going — green, amber, or red — with <b>percentages only</b> (like
+      &ldquo;the plan uses 97% of income&rdquo;), never your dollar amounts, categories, or line items.
+      No messages, no emails — just the light. Switch it off any time and it goes dark.</p>
   </div>
 
   <div class="foot">
     Everything you type is saved on this device only — nothing is shared unless you tap
-    <b>Copy summary</b> and send it, or switch on <b>Share check-ins with Papa</b> above (which
-    sends status percentages only, never your numbers). The <b>target</b> boxes are shaded; the
-    <b>actual</b> boxes are white.
+    <b>Copy summary</b> and send it, or switch on <b>Papa's status light</b> above (which
+    publishes status percentages only, never your numbers). The <b>target</b> boxes are shaded;
+    the <b>actual</b> boxes are white.
     Not financial advice — a planning worksheet to get your numbers in one place.
   </div>
 </div>
@@ -362,11 +362,11 @@
     }
   });
 
-  // ---- optional "Share check-ins with Papa" status notifications ----
-  // LANCE: paste your Web3Forms access key between the quotes to enable this
-  // feature (see README). While the key is empty the toggle stays hidden and
-  // nothing is ever sent.
-  const NOTIFY_KEY = "";
+  // ---- optional "status light on Papa's dashboard" ----
+  // When the consent toggle is on, the current status (level + percentages,
+  // never dollar amounts) is published to a small shared status slot that
+  // Papa's Command Deck reads. Green is published too, so the light recovers.
+  const STATUS_URL = "https://kvdb.io/T1SxHa1r126cVFmn4NUSEB/vincent-status";
   const SHARE_LS = "vbud:share:v1", SENT_LS = "vbud:notify:v1";
 
   function statusCheck(){
@@ -398,34 +398,25 @@
 
   let notifyT;
   function maybeNotify(){
-    if(!NOTIFY_KEY) return;
     try{ if(localStorage.getItem(SHARE_LS)!=="on") return; }catch(e){ return; }
     clearTimeout(notifyT);
     notifyT = setTimeout(async ()=>{
       const s = statusCheck();
-      if(s.level==="green") return;
-      const sentKey = stamp().iso+":"+s.level+":"+s.flags.map(f=>f[0]).sort().join(",");
-      try{ if(localStorage.getItem(SENT_LS)===sentKey) return; }catch(e){}
-      const body =
-        "Status: "+s.level.toUpperCase()+" — "+stamp().label+"\n\n"+
-        "Their plan uses "+s.pct.planned+"% of income · spending so far is "+s.pct.spent+"% · "+
-        "savings is "+s.pct.savings+"% of income.\n\n"+
-        "Pressure points:\n"+s.flags.map(f=>"• "+f[1]).join("\n")+"\n\n"+
-        "Sent automatically because “Share check-ins with Papa” is switched on. "+
-        "Percentages only — no dollar amounts or line items are included.";
+      const payload = {
+        level: s.level,
+        month: stamp().iso,
+        monthLabel: stamp().label,
+        pct: s.pct,
+        flags: s.flags.map(f=>({id:f[0], text:f[1]})),
+      };
+      // only publish when something actually changed
+      const sig = JSON.stringify(payload);
+      try{ if(localStorage.getItem(SENT_LS)===sig) return; }catch(e){}
+      payload.updated = new Date().toISOString();
       try{
-        const r = await fetch("https://api.web3forms.com/submit",{
-          method:"POST",
-          headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-          body: JSON.stringify({
-            access_key: NOTIFY_KEY,
-            subject: "Budget check-in: "+s.level.toUpperCase()+" — "+stamp().label,
-            from_name: "Vincent & Kayla's Budget Toolkit",
-            message: body,
-          }),
-        });
-        if(r.ok){ try{ localStorage.setItem(SENT_LS, sentKey); }catch(e){} }
-      }catch(e){ /* offline or blocked — try again on a later edit */ }
+        const r = await fetch(STATUS_URL, { method:"PUT", body: JSON.stringify(payload) });
+        if(r.ok){ try{ localStorage.setItem(SENT_LS, sig); }catch(e){} }
+      }catch(e){ /* offline or blocked — retried on the next edit */ }
     }, 6000);
   }
 
@@ -594,17 +585,15 @@
     if(!state.variable) state.variable=[];
     $("#income").value = state.income || "";
     renderAll();
-    // consent toggle: only shown when the notify key is configured
-    if(NOTIFY_KEY){
-      const box=$("#sharebox"), tgl=$("#share-toggle");
-      box.hidden=false;
-      try{ tgl.checked = localStorage.getItem(SHARE_LS)==="on"; }catch(e){}
-      tgl.addEventListener("change", ()=>{
-        try{ localStorage.setItem(SHARE_LS, tgl.checked?"on":"off"); }catch(e){}
-        toast(tgl.checked ? "Check-ins with Papa are ON" : "Check-ins with Papa are OFF");
-        if(tgl.checked) maybeNotify();
-      });
-    }
+    // consent toggle for the status light
+    const box=$("#sharebox"), tgl=$("#share-toggle");
+    box.hidden=false;
+    try{ tgl.checked = localStorage.getItem(SHARE_LS)==="on"; }catch(e){}
+    tgl.addEventListener("change", ()=>{
+      try{ localStorage.setItem(SHARE_LS, tgl.checked?"on":"off"); localStorage.removeItem(SENT_LS); }catch(e){}
+      toast(tgl.checked ? "Papa's status light is ON" : "Papa's status light is OFF");
+      if(tgl.checked) maybeNotify();
+    });
   })();
 </script>
 </body>

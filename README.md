@@ -41,34 +41,33 @@ Numbers only leave his device when he taps **Copy summary** and sends the text h
   inside `worksheet.html`. (Vincent's saved data overrides these once he's typed anything.)
 - **Adjust spending-guide percentages** — the `GUIDE` array inside `calculator.html`.
 
-## "Share check-ins with Papa" (status notifications)
+## "Papa's status light" (Command Deck indicator)
 
-The worksheet contains an **opt-in** notification feature: when Vincent & Kayla switch on the
-"Share check-ins with Papa" toggle and their month looks stretched, Lance gets an automatic
-email. It is dormant until activated:
+The worksheet contains an **opt-in** status light: when Vincent & Kayla switch on the
+"Turn on Papa's status light" toggle, the worksheet publishes their current status —
+green / amber / red plus percentages — to a small shared status slot, and Lance's Command
+Deck shows it as an indicator in the finance rail. No emails, no messages.
 
-**One-time setup (Lance):**
-1. Go to https://web3forms.com, enter your email address, and copy the **access key** it sends
-   you (no account or password — the key is the whole credential).
-2. In `worksheet.html`, find `const NOTIFY_KEY = "";` (marked with a `LANCE:` comment) and paste
-   the key between the quotes.
-3. Commit and push. The consent toggle appears on the worksheet only after the key is set.
+**The plumbing:** the status slot is a kvdb.io bucket
+(`https://kvdb.io/T1SxHa1r126cVFmn4NUSEB/vincent-status`) registered to Lance's email.
+Writes only work after the bucket's one-time email verification (kvdb sends the link when
+the bucket is created). The worksheet PUTs a JSON payload there; the deck GETs it.
 
 **How it behaves:**
-- **Off by default.** Nothing is ever sent unless they turn the toggle on; turning it off stops
-  everything immediately.
-- **Amber/red only.** Statuses: *red* = plan exceeds income or spending has passed income;
-  *amber* = under 5% of income unassigned, spending past 95% of income, or savings under 5% of a
-  mostly-complete plan. Green months send nothing. Status isn't judged at all until income is
-  entered and targets reach at least half of income (so a half-filled worksheet doesn't false-alarm).
-- **Percentages only.** The email says things like "plan uses 97% of income" — it never contains
-  dollar amounts, category names, or line items. This is stated verbatim on the worksheet so the
-  kids know exactly what's shared.
-- **Once per month per status.** A given month/status/flag combination sends one email
-  (deduplicated in their browser), so edits don't spam you.
-- The email arrives from Web3Forms with subject `Budget check-in: AMBER — <Month Year>` and lists
-  the pressure points with a suggestion for each (free tier: 250 emails/month — far more than
-  this will ever use).
+- **Off by default.** Nothing is published unless they turn the toggle on; turning it off stops
+  publishing immediately (the deck will show the last report as stale, then "no report").
+- **Statuses:** *red* = plan exceeds income or spending has passed income; *amber* = under 5% of
+  income unassigned, spending past 95% of income, or savings under 5% of a mostly-complete plan;
+  *green* = everything else, and green **is** published so the light recovers after a tight month.
+  Status isn't judged at all until income is entered and targets reach at least half of income
+  (so a half-filled worksheet doesn't false-alarm).
+- **Percentages only.** The payload carries things like "plan uses 97% of income" — never dollar
+  amounts, category names, or line items. This is stated verbatim on the worksheet so the kids
+  know exactly what's shared.
+- **Publish-on-change.** The worksheet only writes when the status payload actually differs from
+  the last one it sent (tracked in their browser), so edits don't hammer the slot.
+- **Caveat:** the slot's URL is visible in this public repo, so treat the status as
+  semi-public — which is why it carries percentages and nothing else.
 
 ## Adding the reconciliation tool later
 
