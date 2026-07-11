@@ -167,6 +167,8 @@
 
   <div class="controls">
     <button class="ctl primary" id="copy-btn">Copy summary to send back</button>
+    <button class="ctl" id="xlsx-btn">Download Excel</button>
+    <button class="ctl" id="pdf-btn">Download PDF</button>
     <button class="ctl" id="reset-btn">Reset worksheet</button>
   </div>
 
@@ -340,6 +342,154 @@
       catch(_){ toast("Couldn't auto-copy — long-press to select"); }
       document.body.removeChild(ta);
     }
+  });
+
+  // ---- exports: Excel (.xlsx) and stylized PDF ----
+  const CDN = {
+    xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
+    jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    autotable: "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
+  };
+  function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("load failed: "+src)); document.head.appendChild(s); }); }
+
+  const SECTION_META = {
+    committed:{label:"Committed — bills the same every month", head:[54,86,124],  soft:[227,234,242]},
+    savings:  {label:"Savings — pay yourself first",           head:[46,110,78],  soft:[226,239,232]},
+    variable: {label:"Variable — moves month to month",        head:[122,106,82], soft:[238,234,226]},
+  };
+  function exportData(){
+    const income=parse(state.income);
+    const groups={}; let any=false, planned=0, spent=0;
+    GROUPS.forEach(g=>{
+      const rows=state[g].filter(r=>String(r.name).trim()&&(parse(r.target)||parse(r.actual)))
+        .map(r=>({name:String(r.name).trim(),t:parse(r.target),a:parse(r.actual)}));
+      const tSum=rows.reduce((s,r)=>s+r.t,0), aSum=rows.reduce((s,r)=>s+r.a,0);
+      planned+=tSum; spent+=aSum; if(rows.length) any=true;
+      groups[g]={rows,tSum,aSum};
+    });
+    return {income,groups,planned,spent,any};
+  }
+  function stamp(){ const d=new Date(); return {
+    iso:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"),
+    label:d.toLocaleDateString("en-US",{month:"long",year:"numeric"}),
+    full:d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}; }
+
+  function buildWorkbook(d){
+    const aoa=[], fmls=[], curr=[];
+    const push=r=>aoa.push(r); // aoa.length after push = that row's 1-based number
+    push(["VINCENT & KAYLA — MONTHLY BUDGET"]);
+    push([stamp().label]);
+    push([]);
+    push(["Monthly income (after taxes)",d.income]); const incRow=aoa.length; curr.push("B"+incRow);
+    push([]);
+    const totRows=[];
+    GROUPS.forEach(g=>{
+      const G=d.groups[g];
+      push([SECTION_META[g].label.toUpperCase()]);
+      push(["Expense","Target","Actual","Left"]);
+      let first=0,last=0;
+      G.rows.forEach(r=>{
+        push([r.name,r.t,r.a,r.t-r.a]); const n=aoa.length;
+        if(!first) first=n; last=n;
+        fmls.push(["D"+n,"B"+n+"-C"+n]); curr.push("B"+n,"C"+n,"D"+n);
+      });
+      push(["Total",G.tSum,G.aSum,G.tSum-G.aSum]); const n=aoa.length;
+      if(first){ fmls.push(["B"+n,"SUM(B"+first+":B"+last+")"],["C"+n,"SUM(C"+first+":C"+last+")"]); }
+      fmls.push(["D"+n,"B"+n+"-C"+n]); curr.push("B"+n,"C"+n,"D"+n);
+      totRows.push(n);
+      push([]);
+    });
+    push(["THE MATH"]);
+    push(["Planned out (targets)",d.planned]); const pl=aoa.length;
+    push(["Actual out",d.spent]); const sp=aoa.length;
+    push(["Plan vs income",d.income-d.planned]); const pv=aoa.length;
+    push(["Left this month",d.income-d.spent]); const lf=aoa.length;
+    fmls.push(["B"+pl,totRows.map(r=>"B"+r).join("+")||"0"],
+              ["B"+sp,totRows.map(r=>"C"+r).join("+")||"0"],
+              ["B"+pv,"B"+incRow+"-B"+pl],
+              ["B"+lf,"B"+incRow+"-B"+sp]);
+    curr.push("B"+pl,"B"+sp,"B"+pv,"B"+lf);
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    fmls.forEach(([a,f])=>{ if(ws[a]) ws[a].f=f; });
+    curr.forEach(a=>{ if(ws[a]&&typeof ws[a].v==="number") ws[a].z='"$"#,##0'; });
+    ws["!cols"]=[{wch:30},{wch:12},{wch:12},{wch:12}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Budget");
+    return wb;
+  }
+
+  function buildPdf(d){
+    const doc=new window.jspdf.jsPDF({unit:"pt",format:"letter"});
+    const M=48, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+    const st=stamp();
+    doc.setTextColor(72,86,106); doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+    doc.text("FAMILY BUDGET · MONTHLY RECORD",M,52,{charSpace:2});
+    doc.setTextColor(22,32,46); doc.setFontSize(21);
+    doc.text("Vincent & Kayla — "+st.label,M,78);
+    doc.setDrawColor(22,32,46); doc.setLineWidth(2); doc.line(M,90,W-M,90);
+    doc.setFont("helvetica","normal"); doc.setFontSize(11);
+    doc.text("Monthly income (after taxes):",M,112);
+    doc.setFont("helvetica","bold"); doc.text(money(d.income),M+160,112);
+    let y=128;
+    GROUPS.forEach(g=>{
+      const G=d.groups[g], meta=SECTION_META[g];
+      if(!G.rows.length) return;
+      doc.autoTable({
+        startY:y, margin:{left:M,right:M},
+        head:[[{content:meta.label,colSpan:4,styles:{halign:"left",fontSize:10}}],
+              ["Expense","Target","Actual","Left"]],
+        body:G.rows.map(r=>[r.name,money(r.t),money(r.a),money(r.t-r.a)]),
+        foot:[["Total",money(G.tSum),money(G.aSum),money(G.tSum-G.aSum)]],
+        theme:"grid",
+        styles:{font:"helvetica",fontSize:9.5,cellPadding:5,textColor:[22,32,46],lineColor:[214,220,228],lineWidth:.5},
+        headStyles:{fillColor:meta.head,textColor:255,fontStyle:"bold",halign:"right"},
+        footStyles:{fillColor:meta.soft,textColor:[22,32,46],fontStyle:"bold",halign:"right"},
+        columnStyles:{0:{halign:"left"},1:{halign:"right",cellWidth:78},2:{halign:"right",cellWidth:78},3:{halign:"right",cellWidth:78}},
+        didParseCell:c=>{ if(c.section!=="body"&&c.column.index===0) c.cell.styles.halign="left"; },
+      });
+      y=doc.lastAutoTable.finalY+16;
+    });
+    const bal=d.income-d.planned, left=d.income-d.spent;
+    if(y+130>H-40){ doc.addPage(); y=52; }
+    doc.setFillColor(22,32,46); doc.roundedRect(M,y,W-2*M,110,8,8,"F");
+    doc.setTextColor(174,185,199); doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+    doc.text("THE MATH",M+18,y+24,{charSpace:2});
+    const cells=[["Income",money(d.income),0],["Planned (targets)",money(d.planned),0],
+                 ["Plan vs income",money(bal),bal],["Spent (actuals)",money(d.spent),0],
+                 ["Left this month",money(left),left]];
+    const colW=(W-2*M-36)/3;
+    cells.forEach((c,i)=>{
+      const cx=M+18+(i%3)*colW, cy=y+44+Math.floor(i/3)*32;
+      doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(174,185,199);
+      doc.text(c[0].toUpperCase(),cx,cy,{charSpace:1});
+      doc.setFont("helvetica","bold"); doc.setFontSize(13);
+      if(c[2]<0) doc.setTextColor(240,163,155); else if(c[2]>0) doc.setTextColor(127,211,162); else doc.setTextColor(255,255,255);
+      doc.text(c[1],cx,cy+15);
+    });
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(122,138,158);
+    doc.text("Generated "+st.full+" · Your numbers live on your device — this file is the portable record.",M,H-34);
+    return doc;
+  }
+
+  $("#xlsx-btn").addEventListener("click", async ()=>{
+    const d=exportData();
+    if(!d.any){ toast("Nothing to export yet — fill in a few lines first"); return; }
+    try{
+      if(!window.XLSX){ toast("Preparing Excel export…"); await loadScript(CDN.xlsx); }
+      XLSX.writeFile(buildWorkbook(d),"vincent-kayla-budget-"+stamp().iso+".xlsx");
+      toast("Excel file downloaded");
+    }catch(e){ toast("Export failed — check your connection and try again"); }
+  });
+
+  $("#pdf-btn").addEventListener("click", async ()=>{
+    const d=exportData();
+    if(!d.any){ toast("Nothing to export yet — fill in a few lines first"); return; }
+    try{
+      if(!window.jspdf){ toast("Preparing PDF export…"); await loadScript(CDN.jspdf); }
+      if(!window.jspdf.jsPDF.API.autoTable){ await loadScript(CDN.autotable); }
+      buildPdf(d).save("vincent-kayla-budget-"+stamp().iso+".pdf");
+      toast("PDF downloaded");
+    }catch(e){ toast("Export failed — check your connection and try again"); }
   });
 
   $("#reset-btn").addEventListener("click", async ()=>{

@@ -10,7 +10,7 @@ no framework — every page is a self-contained HTML file.
 | File | What it is |
 |---|---|
 | `index.html` | Landing page — note to Vincent, links to the tools, starter-family money tips |
-| `worksheet.html` | The budget worksheet (targets vs actuals, live totals, "Copy summary" export) |
+| `worksheet.html` | The budget worksheet (targets vs actuals, live totals, "Copy summary" export, plus Download Excel / Download PDF buttons that generate a formula-driven `.xlsx` or a styled PDF of the current month entirely in the browser) |
 | `calculator.html` | Finance-it-vs-save-for-it comparison + income-based spending guide |
 | `vincent-budget.xlsx` | Excel version of the worksheet, offered as a download |
 
@@ -55,5 +55,7 @@ exists:
 ## One caution
 
 If Vincent clears his browser data (or uses private browsing), his saved worksheet entries
-are gone — `localStorage` is per-browser, per-device. Encourage him to send the summary back
-once it's filled in; that text is the durable copy.
+are gone — `localStorage` is per-browser, per-device. Encourage him to use **Download Excel**
+or **Download PDF** at the end of each month; those files are the durable, portable records
+(the Excel/PDF libraries load from CDNs on first use, so the export buttons need an internet
+connection — everything else works offline once loaded).
