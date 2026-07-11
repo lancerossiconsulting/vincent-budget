@@ -1,6 +1,6 @@
-# Vincent's Budget Toolkit
+# Vincent & Kayla's Budget Toolkit
 
-Static GitHub Pages site hosting budgeting tools for Vincent. No build step, no server,
+Static GitHub Pages site hosting budgeting tools for Vincent and Kayla. No build step, no server,
 no framework — every page is a self-contained HTML file.
 
 **Live site:** https://lancerossiconsulting.github.io/vincent-budget/
