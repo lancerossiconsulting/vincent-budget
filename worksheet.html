@@ -90,6 +90,11 @@
   button.ctl.primary{background:var(--keep);color:#fff;border-color:var(--keep)}
   button.ctl.primary:hover{background:#27603f}
 
+  .share{background:var(--keep-soft);border:1px solid #BED8C9;border-radius:12px;padding:14px 16px;margin-top:18px;font-size:13px;color:#24402F}
+  .share label{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:var(--keep);cursor:pointer}
+  .share input[type=checkbox]{width:17px;height:17px;accent-color:var(--keep);cursor:pointer}
+  .share p{margin-top:7px;line-height:1.55}
+
   .foot{margin-top:22px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -175,9 +180,19 @@
     internet connection (they fetch their tools the first time you tap them). The worksheet itself
     works offline once loaded.</p>
 
+  <div class="share" id="sharebox" hidden>
+    <label><input type="checkbox" id="share-toggle"> Share check-ins with Papa</label>
+    <p>Optional, and off unless you turn it on. When it's on and a month starts looking stretched,
+      Papa automatically gets a short note saying so — <b>percentages only</b> (like &ldquo;the plan uses 97%
+      of income&rdquo;), never your dollar amounts, categories, or line items. Nothing is sent while things
+      look comfortable. Switch it off any time and nothing more goes out.</p>
+  </div>
+
   <div class="foot">
-    Everything you type is saved on this device only — nothing is shared until you tap
-    <b>Copy summary</b> and send it. The <b>target</b> boxes are shaded; the <b>actual</b> boxes are white.
+    Everything you type is saved on this device only — nothing is shared unless you tap
+    <b>Copy summary</b> and send it, or switch on <b>Share check-ins with Papa</b> above (which
+    sends status percentages only, never your numbers). The <b>target</b> boxes are shaded; the
+    <b>actual</b> boxes are white.
     Not financial advice — a planning worksheet to get your numbers in one place.
   </div>
 </div>
@@ -222,7 +237,7 @@
 
   let state = null;
 
-  async function persist(){ await sSet(KEY, JSON.stringify(state)); }
+  async function persist(){ await sSet(KEY, JSON.stringify(state)); maybeNotify(); }
 
   function rowHtml(group,i,r){
     const isSave = group==="savings";
@@ -346,6 +361,73 @@
       document.body.removeChild(ta);
     }
   });
+
+  // ---- optional "Share check-ins with Papa" status notifications ----
+  // LANCE: paste your Web3Forms access key between the quotes to enable this
+  // feature (see README). While the key is empty the toggle stays hidden and
+  // nothing is ever sent.
+  const NOTIFY_KEY = "";
+  const SHARE_LS = "vbud:share:v1", SENT_LS = "vbud:notify:v1";
+
+  function statusCheck(){
+    const income = parse(state.income);
+    let planned=0, spent=0, savT=0;
+    GROUPS.forEach(g=>state[g].forEach(r=>{
+      const t=parse(r.target), a=parse(r.actual);
+      planned+=t; spent+=a; if(g==="savings") savT+=t;
+    }));
+    // only judge a plan that's actually been sketched out
+    if(!income || planned < income*0.5) return {level:"green", flags:[], pct:null};
+    const flags=[];
+    if(planned > income)
+      flags.push(["overplanned","Their targets add up to more than income — they may need help trimming the plan until it fits."]);
+    else if(income - planned < income*0.05)
+      flags.push(["tight-margin","The plan leaves less than 5% of income unassigned — no room for surprises."]);
+    if(spent > income)
+      flags.push(["overspent","Actual spending has passed income this month."]);
+    else if(spent > income*0.95)
+      flags.push(["near-limit","Spending has reached 95% of income."]);
+    if(planned >= income*0.8 && savT < income*0.05)
+      flags.push(["low-savings","Savings is under 5% of income in the plan — a small automatic transfer might be an easy first suggestion."]);
+    const level = flags.some(f=>f[0]==="overplanned"||f[0]==="overspent") ? "red"
+                : flags.length ? "amber" : "green";
+    const pct = { planned:Math.round(planned/income*100), spent:Math.round(spent/income*100),
+                  savings:Math.round(savT/income*100) };
+    return {level, flags, pct};
+  }
+
+  let notifyT;
+  function maybeNotify(){
+    if(!NOTIFY_KEY) return;
+    try{ if(localStorage.getItem(SHARE_LS)!=="on") return; }catch(e){ return; }
+    clearTimeout(notifyT);
+    notifyT = setTimeout(async ()=>{
+      const s = statusCheck();
+      if(s.level==="green") return;
+      const sentKey = stamp().iso+":"+s.level+":"+s.flags.map(f=>f[0]).sort().join(",");
+      try{ if(localStorage.getItem(SENT_LS)===sentKey) return; }catch(e){}
+      const body =
+        "Status: "+s.level.toUpperCase()+" — "+stamp().label+"\n\n"+
+        "Their plan uses "+s.pct.planned+"% of income · spending so far is "+s.pct.spent+"% · "+
+        "savings is "+s.pct.savings+"% of income.\n\n"+
+        "Pressure points:\n"+s.flags.map(f=>"• "+f[1]).join("\n")+"\n\n"+
+        "Sent automatically because “Share check-ins with Papa” is switched on. "+
+        "Percentages only — no dollar amounts or line items are included.";
+      try{
+        const r = await fetch("https://api.web3forms.com/submit",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+          body: JSON.stringify({
+            access_key: NOTIFY_KEY,
+            subject: "Budget check-in: "+s.level.toUpperCase()+" — "+stamp().label,
+            from_name: "Vincent & Kayla's Budget Toolkit",
+            message: body,
+          }),
+        });
+        if(r.ok){ try{ localStorage.setItem(SENT_LS, sentKey); }catch(e){} }
+      }catch(e){ /* offline or blocked — try again on a later edit */ }
+    }, 6000);
+  }
 
   // ---- exports: Excel (.xlsx) and stylized PDF ----
   const CDN = {
@@ -512,6 +594,17 @@
     if(!state.variable) state.variable=[];
     $("#income").value = state.income || "";
     renderAll();
+    // consent toggle: only shown when the notify key is configured
+    if(NOTIFY_KEY){
+      const box=$("#sharebox"), tgl=$("#share-toggle");
+      box.hidden=false;
+      try{ tgl.checked = localStorage.getItem(SHARE_LS)==="on"; }catch(e){}
+      tgl.addEventListener("change", ()=>{
+        try{ localStorage.setItem(SHARE_LS, tgl.checked?"on":"off"); }catch(e){}
+        toast(tgl.checked ? "Check-ins with Papa are ON" : "Check-ins with Papa are OFF");
+        if(tgl.checked) maybeNotify();
+      });
+    }
   })();
 </script>
 </body>
