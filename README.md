@@ -41,19 +41,19 @@ Numbers only leave his device when he taps **Copy summary** and sends the text h
   inside `worksheet.html`. (Vincent's saved data overrides these once he's typed anything.)
 - **Adjust spending-guide percentages** — the `GUIDE` array inside `calculator.html`.
 
-## "Papa's status light" (Command Deck indicator)
+## "Dad's status light" (Command Deck indicator)
 
 The worksheet contains an **opt-in** status light: when Vincent & Kayla switch on the
-"Turn on Papa's status light" toggle, the worksheet publishes their current status —
+"Turn on Dad's status light" toggle, the worksheet publishes their current status —
 green / amber / red plus percentages — to a small shared status slot, and Lance's Command
 Deck shows it as an indicator in the finance rail. No emails, no messages.
 
-**The plumbing:** the status slot is an anonymous JSON bin
-(`https://extendsclass.com/api/json-storage/bin/bfaebdd`) — no account, no verification,
-nothing to maintain. The worksheet PUTs a JSON payload there; the deck GETs it. If the bin
-ever disappears (free service, kept alive by the deck's regular reads), the deck simply shows
-"no report"; recreate with `curl -X POST https://extendsclass.com/api/json-storage/bin -H
-"Content-Type: application/json" -d '{}'` and update the URL here and in the deck.
+**The plumbing:** the status slot is a Pantry basket (getpantry.cloud, free JSON storage,
+PantryID `3fce793c-17b9-4691-9376-3e334aefeae4`, registered to Lance's email — the ID is
+the only credential). The worksheet POSTs a JSON payload to
+`.../apiv1/pantry/<id>/basket/vincentStatus`; the deck GETs the same URL. Pantry keeps a
+pantry alive as long as it sees activity (the deck's polling counts), and the dashboard at
+getpantry.cloud lets Lance inspect or wipe the basket by entering the PantryID.
 
 **How it behaves:**
 - **Off by default.** Nothing is published unless they turn the toggle on; turning it off stops

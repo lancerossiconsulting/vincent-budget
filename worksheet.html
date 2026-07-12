@@ -181,8 +181,8 @@
     works offline once loaded.</p>
 
   <div class="share" id="sharebox" hidden>
-    <label><input type="checkbox" id="share-toggle"> Turn on Papa's status light</label>
-    <p>Optional, and off unless you turn it on. When it's on, a small light on Papa's dashboard
+    <label><input type="checkbox" id="share-toggle"> Turn on Dad's status light</label>
+    <p>Optional, and off unless you turn it on. When it's on, a small light on Dad's dashboard
       shows how your month is going — green, amber, or red — with <b>percentages only</b> (like
       &ldquo;the plan uses 97% of income&rdquo;), never your dollar amounts, categories, or line items.
       No messages, no emails — just the light. Switch it off any time and it goes dark.</p>
@@ -190,7 +190,7 @@
 
   <div class="foot">
     Everything you type is saved on this device only — nothing is shared unless you tap
-    <b>Copy summary</b> and send it, or switch on <b>Papa's status light</b> above (which
+    <b>Copy summary</b> and send it, or switch on <b>Dad's status light</b> above (which
     publishes status percentages only, never your numbers). The <b>target</b> boxes are shaded;
     the <b>actual</b> boxes are white.
     Not financial advice — a planning worksheet to get your numbers in one place.
@@ -362,11 +362,11 @@
     }
   });
 
-  // ---- optional "status light on Papa's dashboard" ----
+  // ---- optional "status light on Dad's dashboard" ----
   // When the consent toggle is on, the current status (level + percentages,
   // never dollar amounts) is published to a small shared status slot that
-  // Papa's Command Deck reads. Green is published too, so the light recovers.
-  const STATUS_URL = "https://extendsclass.com/api/json-storage/bin/bfaebdd";
+  // Dad's Command Deck reads. Green is published too, so the light recovers.
+  const STATUS_URL = "https://getpantry.cloud/apiv1/pantry/3fce793c-17b9-4691-9376-3e334aefeae4/basket/vincentStatus";
   const SHARE_LS = "vbud:share:v1", SENT_LS = "vbud:notify:v1";
 
   function statusCheck(){
@@ -414,7 +414,7 @@
       try{ if(localStorage.getItem(SENT_LS)===sig) return; }catch(e){}
       payload.updated = new Date().toISOString();
       try{
-        const r = await fetch(STATUS_URL, { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+        const r = await fetch(STATUS_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
         if(r.ok){ try{ localStorage.setItem(SENT_LS, sig); }catch(e){} }
       }catch(e){ /* offline or blocked — retried on the next edit */ }
     }, 6000);
@@ -591,7 +591,7 @@
     try{ tgl.checked = localStorage.getItem(SHARE_LS)==="on"; }catch(e){}
     tgl.addEventListener("change", ()=>{
       try{ localStorage.setItem(SHARE_LS, tgl.checked?"on":"off"); localStorage.removeItem(SENT_LS); }catch(e){}
-      toast(tgl.checked ? "Papa's status light is ON" : "Papa's status light is OFF");
+      toast(tgl.checked ? "Dad's status light is ON" : "Dad's status light is OFF");
       if(tgl.checked) maybeNotify();
     });
   })();
