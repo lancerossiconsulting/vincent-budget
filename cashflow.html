@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paycheck Ledger — Vincent &amp; Kayla's Budget Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F5;--card:#FBFCFD;--ink:#16202E;--ink-soft:#48566A;--ink-faint:#9AA6B4;--line:#D6DCE4;
+    --keep:#2E6E4E;--keep-soft:#E2EFE8;--fixed:#36567C;--fixed-soft:#E3EAF2;
+    --flex:#7A6A52;--flex-soft:#EEEAE2;--alert:#B5612E;--alert-soft:#F5E6D8;
+    --over:#A6362E;--over-soft:#F6E1DF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;padding:clamp(12px,4vw,40px);font-size:15px}
+  .sheet{max-width:820px;margin:0 auto}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+
+  .back{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--ink-soft);text-decoration:none;display:inline-block;margin-bottom:14px}
+  .back:hover{color:var(--ink)}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+  .eyebrow{font-family:"Archivo",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
+  h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:clamp(24px,5.5vw,36px);line-height:1.04;letter-spacing:-0.02em;margin-bottom:12px}
+  .lede{font-size:14px;color:var(--ink-soft);max-width:62ch}
+
+  section{margin-top:26px}
+  .shead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .shead .k{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;color:#fff;border-radius:5px;padding:4px 9px;letter-spacing:.1em}
+  .k.now{background:var(--fixed)} .k.decide{background:var(--alert)} .k.tl{background:var(--flex)}
+  .k.buf{background:var(--keep)} .k.gray{background:#8894A4}
+  .shead h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em}
+  .shead .sub{margin-left:auto;font-size:12px;color:var(--ink-soft);text-align:right}
+
+  details.sec{margin-top:26px}
+  details.sec>summary{list-style:none;cursor:pointer}
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary .shead h2::after{content:' ▸';color:var(--ink-faint);font-size:14px}
+  details.sec[open]>summary .shead h2::after{content:' ▾'}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.hero{grid-template-columns:1fr}}
+  .hero .big{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:clamp(24px,4.6vw,30px);letter-spacing:-0.02em}
+  .hero .lab{font-family:"Archivo",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+  .carry{font-size:12.5px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+  .v-ok{color:var(--keep)} .v-bad{color:var(--over)}
+
+  table{width:100%;border-collapse:collapse}
+  th{font-family:"Archivo",sans-serif;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th.l,td.l{text-align:left}
+  td{padding:7px 8px;border-bottom:1px solid #E7ECF2;text-align:right;font-size:13.5px}
+  tr:last-child td{border-bottom:none}
+  .duedate{font-size:11.5px;color:var(--ink-faint)}
+  .past{opacity:.5}
+  .marked td.l{font-weight:600}
+  .marked td.l::before{content:'⚑ ';color:var(--alert)}
+
+  /* reach-forward advisory cards */
+  .advise{border-left:4px solid var(--alert);margin-bottom:14px}
+  .advise .ahead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .advise .ahead .disp{font-family:"Archivo",sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.01em}
+  .pill{font-family:"Archivo",sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px}
+  .pill.short{background:var(--over);color:#fff}
+  .pill.ok{background:var(--keep);color:#fff}
+  .branches{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  @media(max-width:640px){.branches{grid-template-columns:1fr}}
+  .branch{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;background:#fff}
+  .branch h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:13px;margin-bottom:6px}
+  .branch.on{border-color:var(--keep);background:var(--keep-soft)}
+  .branch.off{border-color:#DEB8A4;background:var(--alert-soft)}
+  .branch ul{margin:4px 0 0 16px}
+  .branch li{margin:3px 0}
+  .togglerow{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .tog{position:relative;width:46px;height:24px;flex:none}
+  .tog input{opacity:0;width:0;height:0}
+  .tog .tk{position:absolute;inset:0;background:#B3BCC7;border-radius:24px;transition:.2s;cursor:pointer}
+  .tog .tk:before{content:'';position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  .tog input:checked + .tk{background:var(--keep)}
+  .tog input:checked + .tk:before{transform:translateX(22px)}
+  .togglerow b{font-size:13px}
+
+  /* timeline */
+  .trow{display:grid;grid-template-columns:110px 1fr 190px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #E7ECF2}
+  .trow:last-child{border-bottom:none}
+  @media(max-width:640px){.trow{grid-template-columns:90px 1fr} .trow .tnums{grid-column:1/-1;text-align:left}}
+  .tdate{font-size:12.5px}
+  .tdate b{font-family:"Archivo",sans-serif;font-weight:700;font-size:13.5px}
+  .chip3{display:inline-block;font-family:"Archivo",sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:var(--alert);color:#fff;border-radius:4px;padding:2px 7px;font-weight:700;margin-top:3px}
+  .track{position:relative;height:14px;background:#E2E7EE;border-radius:7px;overflow:hidden}
+  .track .fill{position:absolute;left:0;top:0;bottom:0;background:var(--keep);opacity:.8}
+  .track .fill.over{background:var(--over);opacity:.9}
+  .track .cap{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+  .tnums{font-size:12px;text-align:right;color:var(--ink-soft)}
+  .tnums b{color:var(--ink)}
+  .tnums b.v-ok{color:var(--keep)}
+  .tnums b.v-bad{color:var(--over)}
+
+  /* buffer */
+  .bufbar{height:18px;background:#E2E7EE;border-radius:9px;overflow:hidden;margin:10px 0 6px}
+  .bufbar .fill{height:100%;background:var(--keep);transition:width .4s}
+  .bufnote{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+  /* dad note */
+  .dadnote{border-left:4px solid var(--keep);margin-top:26px}
+  .dadnote h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+  .dadnote p{font-size:13.5px;color:var(--ink-soft)}
+  .dadnote a{color:var(--fixed)}
+
+  /* forms */
+  input[type=text],input[type=date],input[type=number],textarea{
+    font-family:"IBM Plex Mono",monospace;font-size:14px;background:#fff;border:1px solid var(--line);
+    border-radius:7px;padding:8px 10px;color:var(--ink)}
+  input:focus,textarea:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+  input.dueday{width:64px;text-align:center}
+  input.moneyin{width:130px;text-align:right}
+  textarea{width:100%;min-height:120px;font-size:12px}
+  .frow{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin-bottom:12px}
+  .frow label{display:block;font-family:"Archivo",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+  .hint{font-size:12px;color:var(--ink-faint)}
+  button.act{font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;background:var(--keep);color:#fff;
+    border:1px solid var(--keep);border-radius:9px;padding:10px 16px;cursor:pointer;transition:.15s}
+  button.act:hover{background:#27603f}
+  .srcstate{font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:12px}
+  .srcstate.ok{background:var(--keep-soft);color:var(--keep)}
+  .srcstate.none{background:var(--over-soft);color:var(--over)}
+
+  .foot{margin-top:30px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <a class="back" href="index.html">← Back to the toolkit</a>
+  <header>
+    <div class="eyebrow">Cashflow · Paycheck Timing</div>
+    <h1>The Paycheck Ledger</h1>
+    <p class="lede">Your monthly budget says whether the month works. This page answers a different
+      question: <b>which check carries which cost.</b> It reads your budget — it never changes it.</p>
+  </header>
+
+  <div id="app"></div>
+
+  <!-- ===================== BUDGET FEED ===================== -->
+  <details class="sec" id="feedsec">
+    <summary><div class="shead"><span class="k gray">Feed</span><h2>The budget behind this page</h2><span class="sub">read-only — edit numbers in the worksheet</span></div></summary>
+    <div class="card">
+      <div id="srcstate" class="srcstate none">No budget loaded yet.</div>
+      <p style="font-size:13px;margin-bottom:8px">On this device this page reads your saved
+        <a href="worksheet.html">worksheet</a> automatically. On another device, open the worksheet,
+        tap <b>Copy summary</b>, and paste it here. Either way this page never edits those numbers —
+        the worksheet stays the plan of record.</p>
+      <textarea id="pastebox" placeholder="Paste your Copy-summary text (or raw JSON) here…"></textarea>
+      <div style="margin-top:10px"><button class="act" id="loadbtn">Load budget</button></div>
+      <div id="feedtable" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  <!-- ===================== SETUP ===================== -->
+  <details class="sec" id="setupsec">
+    <summary><div class="shead"><span class="k gray">Setup</span><h2>Pay cycle &amp; due dates</h2><span class="sub">saved on this device</span></div></summary>
+    <div class="card">
+      <div class="frow">
+        <div><label for="anchor">A payday you know (any recent one)</label>
+          <input type="date" id="anchor"></div>
+        <div><label for="percheck">Take-home per check ($)</label>
+          <input type="number" id="percheck" class="moneyin" placeholder="0" step="1">
+          <div class="hint" id="derivedhint"></div></div>
+        <div><label for="bufnow">Buffer saved so far ($)</label>
+          <input type="number" id="bufnow" class="moneyin" placeholder="0" step="1"></div>
+      </div>
+      <div id="duetable"></div>
+      <p class="hint" style="margin-top:10px">Leave a due day blank for anything that doesn't hit on a
+        fixed date — it gets carried evenly by every check instead. <b>Tip:</b> changing a due day here
+        is the fastest way to preview “what if the lender moved my car payment.”</p>
+    </div>
+  </details>
+
+  <div class="foot" id="principle">
+    A paycheck is the <b>next two weeks’ money</b>, not a bonus — the check that lands on the 31st is
+    what carries you through the next two weeks. This page never sets a target and never says a cost
+    should be different; that’s the budget’s job. It only answers <b>when</b>. Everything here stays
+    on this device.
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>(n<0?'−$':'$')+Math.abs(Math.round(n)).toLocaleString('en-US');
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const DAY=864e5;
+const CFG_KEY='vbud:cash:v1';
+const CHECK_FACTOR=12/26; // 26 checks carry 12 months
+
+/* ---------- state ---------- */
+let budget=null;   // {income, committed:[{name,target}], savings:[...], variable:[...]}
+let srcMode=null;  // 'auto' | 'cache' | 'paste'
+let cfg={anchor:'', perCheck:'', buffer:'', dueDays:{}, prefunds:{}, budgetCache:null};
+
+function loadCfg(){ try{ const raw=localStorage.getItem(CFG_KEY); if(raw) cfg=Object.assign(cfg,JSON.parse(raw)); }catch(e){} }
+function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }catch(e){} }
+
+let toastT;
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
+
+/* ---------- budget parsing (read-only) ---------- */
+function parseSummaryText(txt){
+  const inc=txt.match(/Income[^:]*:\s*\$?([\d,]+)/i);
+  if(!inc) return null;
+  const out={income:parseFloat(inc[1].replace(/,/g,'')), committed:[], savings:[], variable:[]};
+  let bucket=null;
+  for(const line of txt.split(/\r?\n/)){
+    const h=line.trim().toUpperCase();
+    if(h==='COMMITTED') {bucket='committed'; continue;}
+    if(h==='SAVINGS')   {bucket='savings'; continue;}
+    if(h==='VARIABLE')  {bucket='variable'; continue;}
+    const m=line.match(/^\s+(.+?)\s+—\s+target\s+\$?([\d,]+)/);
+    if(m && bucket) out[bucket].push({name:m[1].trim(), target:parseFloat(m[2].replace(/,/g,''))});
+  }
+  return (out.committed.length||out.savings.length||out.variable.length)?out:null;
+}
+function parseJsonBudget(txt){
+  try{
+    const j=JSON.parse(txt);
+    if(!j || typeof j!=='object') return null;
+    const p=v=>{const n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;};
+    const grab=a=>(Array.isArray(a)?a:[]).filter(r=>String(r.name||'').trim()&&p(r.target)>0)
+      .map(r=>({name:String(r.name).trim(), target:p(r.target)}));
+    const out={income:p(j.income), committed:grab(j.committed), savings:grab(j.savings), variable:grab(j.variable)};
+    return (out.income||out.committed.length)?out:null;
+  }catch(e){ return null; }
+}
+function tryAutoLoad(){
+  // same origin as the worksheet → its saved budget is directly readable
+  try{
+    const raw=localStorage.getItem('vbud:data:v1');
+    if(raw){ const b=parseJsonBudget(raw); if(b){ budget=b; return 'auto'; } }
+  }catch(e){}
+  if(cfg.budgetCache){ const b=parseJsonBudget(JSON.stringify(cfg.budgetCache)); if(b){ budget=b; return 'cache'; } }
+  return null;
+}
+
+/* ---------- the 14-day engine ---------- */
+function atMidnight(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function periodFor(anchor, today){
+  let s=atMidnight(anchor);
+  const t=atMidnight(today);
+  const diff=Math.floor((t-s)/DAY);
+  const k=Math.floor(diff/14);
+  return new Date(s.getTime()+k*14*DAY);
+}
+function fmtD(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function fmtDY(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric'}); }
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function duesInWindow(start){
+  const end=new Date(start.getTime()+13*DAY);
+  const dues=[];
+  (budget.committed||[]).forEach(c=>{
+    const dd=parseInt(cfg.dueDays[c.name],10);
+    if(!dd||dd<1||dd>31) return;
+    for(const base of [start,end]){
+      const y=base.getFullYear(), m=base.getMonth();
+      const d=new Date(y,m,Math.min(dd,daysInMonth(y,m)));
+      if(d>=start && d<=end && !dues.some(x=>x.name===c.name && x.date.getTime()===d.getTime()))
+        dues.push({name:c.name, target:c.target, date:d});
+    }
+  });
+  dues.sort((a,b)=>a.date-b.date);
+  return dues;
+}
+function spreadShare(){
+  if(!budget) return 0;
+  let spread=0;
+  (budget.committed||[]).forEach(c=>{ const dd=parseInt(cfg.dueDays[c.name],10); if(!dd) spread+=c.target; });
+  (budget.savings||[]).forEach(s=>spread+=s.target);
+  (budget.variable||[]).forEach(v=>spread+=v.target);
+  return spread*CHECK_FACTOR;
+}
+function perCheckAmount(){
+  const manual=parseFloat(cfg.perCheck);
+  if(manual>0) return manual;
+  return budget?budget.income*CHECK_FACTOR:0;
+}
+function computePeriods(n){
+  const anchor=new Date(cfg.anchor+'T00:00:00');
+  const cur=periodFor(anchor,new Date());
+  const share=spreadShare(), check=perCheckAmount();
+  const list=[];
+  for(let i=0;i<n;i++){
+    const start=new Date(cur.getTime()+i*14*DAY);
+    const dues=duesInWindow(start);
+    const duesTotal=dues.reduce((s,d)=>s+d.target,0);
+    list.push({i,start,end:new Date(start.getTime()+13*DAY),dues,duesTotal,share,check,
+               required:duesTotal+share, free:check-duesTotal-share, preOut:0, preIn:0});
+  }
+  // advisory reach-forward: deficits pull from the previous check when accepted
+  for(let i=1;i<list.length;i++){
+    const p=list[i];
+    if(p.free+p.preIn<0){
+      const need=-(p.free+p.preIn);
+      p.suggest={need, fromIdx:i-1};
+      const key=p.start.toISOString().slice(0,10);
+      if(cfg.prefunds[key]){
+        list[i-1].preOut+=need;
+        p.preIn+=need;
+      }
+    }
+  }
+  list.forEach(p=>{ p.netFree=p.free - p.preOut + p.preIn; });
+  return list;
+}
+function thirdCheckMonths(list){
+  const seen={};
+  list.forEach(p=>{ const k=p.start.getFullYear()+'-'+p.start.getMonth(); seen[k]=(seen[k]||0)+1; });
+  return list.map(p=>{ const k=p.start.getFullYear()+'-'+p.start.getMonth();
+    const idx=list.filter(q=>q.start<=p.start && (q.start.getFullYear()+'-'+q.start.getMonth())===k).length;
+    return seen[k]>=3 && idx===3; });
+}
+
+/* ---------- render ---------- */
+function render(){
+  const app=$('#app');
+  renderFeed();
+  renderSetup();
+  if(!budget){
+    app.innerHTML=`<div class="card" style="border-left:4px solid var(--alert)">
+      <b style="font-family:'Archivo',sans-serif;font-weight:700;font-size:16px">Start with the budget feed.</b>
+      <p style="font-size:13.5px;margin-top:6px;color:var(--ink-soft)">If you've used the
+      <a href="worksheet.html">worksheet</a> on this device, refresh this page and your budget loads by
+      itself. Otherwise paste your <b>Copy summary</b> below — this page builds everything from those
+      numbers and never changes them.</p></div>`;
+    return;
+  }
+  if(!cfg.anchor){
+    app.innerHTML=`<div class="card" style="border-left:4px solid var(--alert)">
+      <b style="font-family:'Archivo',sans-serif;font-weight:700;font-size:16px">One date to place the cycle.</b>
+      <p style="font-size:13.5px;margin-top:6px;color:var(--ink-soft)">Open <b>Setup</b> below and enter
+      any payday you know. Every 14-day window on this page is measured from it.</p></div>`;
+    $('#setupsec').open=true;
+    return;
+  }
+  const list=computePeriods(7);
+  const cur=list[0];
+  const today=atMidnight(new Date());
+  const thirds=thirdCheckMonths(list);
+
+  /* hero */
+  let duesRows=cur.dues.map(d=>{
+    const past=d.date<today;
+    return `<tr class="${past?'past':''} ${/car/i.test(d.name)?'marked':''}">
+      <td class="l">${esc(d.name)} <span class="duedate">due ${fmtD(d.date)}${past?' · behind you':''}</span></td>
+      <td class="num">${money(d.target)}</td></tr>`;
+  }).join('');
+  if(!cur.dues.length) duesRows=`<tr><td class="l" style="color:var(--ink-faint)">no fixed bills land in this window — a carrying check</td><td></td></tr>`;
+  const setAside=cur.duesTotal+cur.share+cur.preOut;
+  const heroHtml=`
+  <section>
+    <div class="shead"><span class="k now">This check</span><h2>${fmtDY(cur.start)}</h2>
+      <span class="sub">carries you to ${fmtDY(new Date(cur.start.getTime()+14*DAY))}</span></div>
+    <div class="hero">
+      <div class="card">
+        <div class="lab">What landed</div>
+        <div class="big num">${money(cur.check)}</div>
+        <div class="carry">This is the next two weeks’ money — not a surplus.</div>
+        <div style="margin-top:14px" class="lab">Due before the next check</div>
+        <table><tbody>${duesRows}
+          <tr><td class="l" style="color:var(--ink-soft)">everyday share <span class="duedate">groceries, gas &amp; savings — sized so 26 checks cover 12 months</span></td>
+              <td class="num">${money(cur.share)}</td></tr>
+          ${cur.preOut?`<tr><td class="l" style="color:var(--alert)">reaching forward (you accepted below)</td><td class="num">${money(cur.preOut)}</td></tr>`:''}
+        </tbody></table>
+      </div>
+      <div class="card">
+        <div class="lab">Set aside now</div>
+        <div class="big num">${money(setAside)}</div>
+        <div class="lab" style="margin-top:16px">${cur.netFree>=0?'Free until next check':'Short this period'}</div>
+        <div class="big num ${cur.netFree>=0?'v-ok':'v-bad'}">${money(cur.netFree)}</div>
+        <div class="carry">${cur.netFree>=0
+          ?'Free means free — after bills, the everyday share, and anything you chose to reach forward for.'
+          :'This window doesn’t fit inside this check. The buffer (or a reach-forward from the check before) is what closes it.'}</div>
+      </div>
+    </div>
+  </section>`;
+
+  /* reach-forward advisory */
+  const advisories=list.filter(p=>p.suggest);
+  let adviseHtml='';
+  if(advisories.length){
+    adviseHtml=`<section><div class="shead"><span class="k decide">Your call</span><h2>Reaching forward</h2>
+      <span class="sub">the math both ways — you decide</span></div>`+
+      advisories.map(p=>{
+        const key=p.start.toISOString().slice(0,10);
+        const on=!!cfg.prefunds[key];
+        const from=list[p.suggest.fromIdx];
+        const names=p.dues.map(d=>esc(d.name)).join(', ')||'its everyday share';
+        return `<div class="card advise">
+          <div class="ahead"><span class="pill ${on?'ok':'short'}">${on?'covered':'runs short'}</span>
+            <span class="disp">The ${fmtD(p.start)} check is ${money(p.suggest.need)} light</span></div>
+          <p style="font-size:13.5px;color:var(--ink-soft)">That window carries ${names} plus the everyday share — together
+            ${money(p.required)} against a ${money(p.check)} check. The check before it
+            (${fmtD(from.start)}) ${from.netFree+(on?p.suggest.need:0) >= p.suggest.need
+              ?'has room to reach forward.':'is also tight — reaching forward will push it negative; the buffer may be the honest answer.'}</p>
+          <div class="branches">
+            <div class="branch ${on?'on':''}"><h4>If you set aside ${money(p.suggest.need)} now</h4>
+              <ul><li>The ${fmtD(from.start)} check’s free money drops ${money(Math.max(0,from.netFree+(on?p.suggest.need:0)))} → ${money(from.netFree+(on?0:-p.suggest.need))}</li>
+                  <li>The ${fmtD(p.start)} window lands already funded — nothing to juggle that week</li></ul></div>
+            <div class="branch ${on?'':'off'}"><h4>If you don’t</h4>
+              <ul><li>You keep ${money(p.suggest.need)} free in the ${fmtD(from.start)} check</li>
+                  <li>Around ${fmtD(p.dues[0]?p.dues[0].date:p.start)}, the shortfall has to come out of that week’s
+                      everyday spending or the buffer</li></ul></div>
+          </div>
+          <div class="togglerow">
+            <label class="tog"><input type="checkbox" data-prefund="${key}" ${on?'checked':''}><span class="tk"></span></label>
+            <b>${on?'Reaching forward — it’s set aside.':'Not reaching forward — I’ll carry it when it comes.'}</b>
+          </div>
+        </div>`;
+      }).join('')+`</section>`;
+  }
+
+  /* timeline */
+  const maxScale=Math.max(...list.map(p=>Math.max(p.required,p.check)))*1.05;
+  const tlHtml=`<section><div class="shead"><span class="k tl">Timeline</span><h2>The next six checks</h2>
+    <span class="sub">the drift is the point — watch the load move</span></div>
+    <div class="card">${list.slice(0,7).map((p,ix)=>{
+      const w=Math.min(100,p.required/maxScale*100), cap=Math.min(100,p.check/maxScale*100);
+      const over=p.required>p.check;
+      return `<div class="trow">
+        <div class="tdate"><b>${fmtD(p.start)}</b>${ix===0?' · now':''}
+          ${thirds[ix]?'<br><span class="chip3">3rd check — buffer, not bonus</span>':''}</div>
+        <div class="track"><span class="fill ${over?'over':''}" style="width:${w}%"></span><span class="cap" style="left:${cap}%"></span></div>
+        <div class="tnums">carries ${money(p.required)} · <b class="num ${p.netFree>=0?'v-ok':'v-bad'}">${money(p.netFree)}</b> ${p.netFree>=0?'free':'short'}</div>
+      </div>`;}).join('')}
+      <p class="hint" style="margin-top:10px">The black tick is the check; the bar is what that window must
+        carry. If one bar towers over its neighbors, that’s the due-date pile-up — the free, permanent fix is
+        asking a lender to move a due date (try it in Setup and watch the bars level).</p>
+    </div></section>`;
+
+  /* buffer */
+  const bufNow=parseFloat(cfg.buffer)||0, bufGoal=cur.check;
+  const bufPct=Math.min(100,bufGoal?bufNow/bufGoal*100:0);
+  const bufHtml=`<section><div class="shead"><span class="k buf">Buffer</span><h2>One check ahead</h2>
+    <span class="sub">the goal that makes due dates stop mattering</span></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;font-size:13px;flex-wrap:wrap;gap:6px">
+        <span>Buffer so far: <b class="num">${money(bufNow)}</b></span>
+        <span>Goal — one full check: <b class="num">${money(bufGoal)}</b></span></div>
+      <div class="bufbar"><div class="fill" style="width:${bufPct}%"></div></div>
+      <p class="bufnote">${bufPct>=100
+        ?'You’re a full period ahead — you’re spending last check’s money now, and no due date can crunch you again.'
+        :`${Math.round(bufPct)}% of the way. The order matters: first relieve the pile-up (move a due date),
+          then let the freed room build this. Three-check months and green “free” figures land here first —
+          the extra check is the fastest single step toward being ahead.`}</p>
+    </div></section>`;
+
+  /* dad note */
+  const dadHtml=`<div class="card dadnote">
+    <h3>When a check runs short</h3>
+    <p>A timing crunch is information, not failure. If this page shows a short window coming, flip on
+      <b>Dad’s status light</b> at the bottom of the <a href="worksheet.html">budget worksheet</a> —
+      the light on his dashboard is how he knows it’s worth a call. It only ever shows percentages,
+      never your numbers.</p></div>`;
+
+  app.innerHTML=heroHtml+adviseHtml+tlHtml+bufHtml+dadHtml;
+}
+
+function renderFeed(){
+  const st=$('#srcstate'), ft=$('#feedtable');
+  if(budget){
+    st.className='srcstate ok';
+    const how = srcMode==='auto' ? 'read automatically from your worksheet on this device'
+             : srcMode==='cache' ? 'loaded from your last paste'
+             : 'loaded from your paste';
+    st.textContent='Budget '+how+' — income '+money(budget.income)+'/mo, '+
+      (budget.committed.length+budget.savings.length+budget.variable.length)+' lines. The worksheet stays the plan of record.';
+    const rows=g=>budget[g].map(r=>`<tr><td class="l">${esc(r.name)}</td><td class="num">${money(r.target)}</td></tr>`).join('');
+    ft.innerHTML=`<table><thead><tr><th class="l">Line (read-only)</th><th>Monthly target</th></tr></thead>
+      <tbody>${rows('committed')}${rows('savings')}${rows('variable')}</tbody></table>`;
+  } else { st.className='srcstate none'; st.textContent='No budget loaded yet.'; ft.innerHTML=''; }
+}
+
+function renderSetup(){
+  $('#anchor').value=cfg.anchor||'';
+  $('#percheck').value=cfg.perCheck||'';
+  $('#bufnow').value=cfg.buffer||'';
+  $('#derivedhint').textContent=budget?('blank = '+money(budget.income*CHECK_FACTOR)+' (monthly income × 12⁄26)'):'';
+  const dt=$('#duetable');
+  if(!budget){ dt.innerHTML=''; return; }
+  dt.innerHTML=`<table><thead><tr><th class="l">Committed bill</th><th>Monthly</th><th>Due day (1–31)</th></tr></thead>
+    <tbody>${budget.committed.map(c=>`<tr>
+      <td class="l">${esc(c.name)}</td><td class="num">${money(c.target)}</td>
+      <td><input class="dueday" inputmode="numeric" data-due="${esc(c.name)}" value="${esc(cfg.dueDays[c.name]||'')}" placeholder="—"></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.id==='anchor'){ cfg.anchor=el.value; saveCfg(); render(); return; }
+  if(el.id==='percheck'){ cfg.perCheck=el.value; saveCfg(); render(); return; }
+  if(el.id==='bufnow'){ cfg.buffer=el.value; saveCfg(); render(); return; }
+  if(el.dataset && el.dataset.due!=null){ cfg.dueDays[el.dataset.due]=el.value; saveCfg(); render(); return; }
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset && el.dataset.prefund){
+    cfg.prefunds[el.dataset.prefund]=el.checked; saveCfg(); render();
+    toast(el.checked?'Set aside — that window lands funded':'Kept in this check — carry it when it comes');
+  }
+});
+$('#loadbtn').addEventListener('click',()=>{
+  const txt=$('#pastebox').value.trim();
+  if(!txt){ toast('Paste the worksheet summary first'); return; }
+  const b=parseSummaryText(txt)||parseJsonBudget(txt);
+  if(!b){ toast('Couldn’t read that — paste the Copy-summary text exactly'); return; }
+  budget=b; srcMode='paste'; cfg.budgetCache=b; saveCfg(); render();
+  toast('Budget loaded'); $('#feedsec').open=false; $('#setupsec').open=true;
+});
+
+/* ---------- init ---------- */
+loadCfg();
+srcMode=tryAutoLoad();
+render();
+if(srcMode==='auto') toast('Budget read from your worksheet — nothing to re-enter');
+if(!budget){ $('#feedsec').open=true; }
+</script>
+</body>
+</html>
