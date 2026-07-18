@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconciliation — Vincent &amp; Kayla's Budget Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F5;--card:#FBFCFD;--ink:#16202E;--ink-soft:#48566A;--ink-faint:#9AA6B4;--line:#D6DCE4;
+    --keep:#2E6E4E;--keep-soft:#E2EFE8;--fixed:#36567C;--fixed-soft:#E3EAF2;
+    --flex:#7A6A52;--flex-soft:#EEEAE2;--alert:#B5612E;--alert-soft:#F5E6D8;
+    --over:#A6362E;--over-soft:#F6E1DF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;padding:clamp(12px,4vw,40px);font-size:15px}
+  .sheet{max-width:820px;margin:0 auto}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+
+  .back{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--ink-soft);text-decoration:none;display:inline-block;margin-bottom:14px}
+  .back:hover{color:var(--ink)}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+  .eyebrow{font-family:"Archivo",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
+  h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:clamp(24px,5.5vw,36px);line-height:1.04;letter-spacing:-0.02em;margin-bottom:12px}
+  .lede{font-size:14px;color:var(--ink-soft);max-width:62ch}
+
+  section{margin-top:26px}
+  .shead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .shead .k{font-family:"Archivo",sans-serif;font-weight:700;font-size:11px;color:#fff;border-radius:5px;padding:4px 9px;letter-spacing:.1em}
+  .k.month{background:var(--fixed)} .k.log{background:var(--keep)} .k.cat{background:var(--flex)}
+  .k.close{background:var(--alert)} .k.gray{background:#8894A4}
+  .shead h2{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em}
+  .shead .sub{margin-left:auto;font-size:12px;color:var(--ink-soft);text-align:right}
+
+  details.sec{margin-top:26px}
+  details.sec>summary{list-style:none;cursor:pointer}
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary .shead h2::after{content:' ▸';color:var(--ink-faint);font-size:14px}
+  details.sec[open]>summary .shead h2::after{content:' ▾'}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+
+  /* month hero */
+  .hero{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:640px){.hero{grid-template-columns:1fr 1fr}}
+  .hcell .lab{font-family:"Archivo",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+  .hcell .big{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:clamp(19px,4vw,26px);letter-spacing:-0.02em}
+  .v-ok{color:var(--keep)} .v-bad{color:var(--over)} .v-dim{color:var(--ink-faint)}
+  .pacebar{height:12px;background:#E2E7EE;border-radius:6px;overflow:hidden;position:relative;margin-top:12px}
+  .pacebar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--keep)}
+  .pacebar .fill.hot{background:var(--alert)} .pacebar .fill.over{background:var(--over)}
+  .pacebar .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+  .pacenote{font-size:12.5px;color:var(--ink-soft);margin-top:6px}
+
+  /* quick add */
+  .qadd{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+  .qadd label{display:block;font-family:"Archivo",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+  input,select{font-family:"IBM Plex Mono",monospace;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--fixed);outline-offset:-1px;border-color:var(--fixed)}
+  select{font-family:"IBM Plex Sans",sans-serif}
+  #q-amt{width:110px;text-align:right}
+  #q-note{width:160px;font-family:"IBM Plex Sans",sans-serif}
+  button.act{font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;background:var(--keep);color:#fff;border:1px solid var(--keep);border-radius:9px;padding:10px 16px;cursor:pointer;transition:.15s}
+  button.act:hover{background:#27603f}
+  button.ghost{font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;cursor:pointer;transition:.15s}
+  button.ghost:hover{border-color:var(--ink-soft)}
+  button.danger{font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;background:var(--over);color:#fff;border:1px solid var(--over);border-radius:9px;padding:10px 16px;cursor:pointer}
+
+  /* category bars */
+  .group{margin-bottom:16px}
+  .group h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+  .group h3.gf{color:var(--fixed)} .group h3.gs{color:var(--keep)} .group h3.gv{color:var(--flex)}
+  .crow{display:grid;grid-template-columns:minmax(110px,1fr) 2fr 150px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid #E7ECF2}
+  .crow:last-child{border-bottom:none}
+  @media(max-width:560px){.crow{grid-template-columns:1fr;gap:4px} .crow .cnum{text-align:left}}
+  .cname{font-size:13.5px}
+  .ctrack{position:relative;height:12px;background:#E2E7EE;border-radius:6px;overflow:hidden}
+  .ctrack .fill{position:absolute;left:0;top:0;bottom:0;background:var(--keep);opacity:.85}
+  .ctrack .fill.warn{background:var(--alert)} .ctrack .fill.over{background:var(--over)}
+  .ctrack .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(22,32,46,.4)}
+  .cnum{font-size:12px;text-align:right;color:var(--ink-soft)}
+  .cnum b{color:var(--ink)}
+  .cnum b.v-bad{color:var(--over)}
+
+  /* entries */
+  .entry{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #E7ECF2;font-size:13.5px}
+  .entry:last-child{border-bottom:none}
+  .entry .ed{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-faint);flex:none;width:52px}
+  .entry .ec{flex:1}
+  .entry .ec small{color:var(--ink-faint)}
+  .entry .ea{font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .entry button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:5px}
+  .entry button:hover{color:var(--over);background:var(--over-soft)}
+
+  /* history */
+  .hmonth{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .hmonth .hh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .hmonth .hh b{font-family:"Archivo",sans-serif;font-size:14px}
+  .hmonth .hh .num{font-size:12.5px;color:var(--ink-soft)}
+  .hmonth .hh .pill{margin-left:auto}
+  .pill{font-family:"Archivo",sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px}
+  .pill.good{background:var(--keep);color:#fff} .pill.miss{background:var(--over);color:#fff}
+
+  .dadnote{border-left:4px solid var(--keep);margin-top:26px}
+  .dadnote h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+  .dadnote p{font-size:13.5px;color:var(--ink-soft)}
+  .dadnote a{color:var(--fixed)}
+
+  .srcstate{font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:12px}
+  .srcstate.ok{background:var(--keep-soft);color:var(--keep)}
+  .srcstate.none{background:var(--over-soft);color:var(--over)}
+  textarea{width:100%;min-height:110px;font-family:"IBM Plex Mono",monospace;font-size:12px;background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink)}
+  .hint{font-size:12px;color:var(--ink-faint)}
+
+  .foot{margin-top:30px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <a class="back" href="index.html">← Back to the toolkit</a>
+  <header>
+    <div class="eyebrow">Reconciliation · Live the Month</div>
+    <h1>Your Reconciliation Tool</h1>
+    <p class="lede">The worksheet sets the plan; this page is where you <b>live</b> it. Your targets
+      are locked in from the worksheet — here you just log what you spend, watch each category's
+      runway, and close the month into your history when it's done.</p>
+  </header>
+
+  <div id="app"></div>
+
+  <!-- ===================== HISTORY ===================== -->
+  <details class="sec" id="histsec">
+    <summary><div class="shead"><span class="k gray">Archive</span><h2>Past months</h2><span class="sub">your record, kept on this device</span></div></summary>
+    <div class="card" id="histbody"></div>
+  </details>
+
+  <!-- ===================== PLAN SOURCE ===================== -->
+  <details class="sec" id="feedsec">
+    <summary><div class="shead"><span class="k gray">Plan</span><h2>Where the targets come from</h2><span class="sub">locked from the worksheet</span></div></summary>
+    <div class="card">
+      <div id="srcstate" class="srcstate none">No plan loaded yet.</div>
+      <p style="font-size:13px;margin-bottom:8px">On this device this page locks onto the budget saved by
+        the <a href="worksheet.html">worksheet</a>. On another device, paste your worksheet's
+        <b>Copy summary</b> here. Targets are <b>locked for the month</b> — to change the plan itself,
+        change the worksheet, then re-lock next month.</p>
+      <textarea id="pastebox" placeholder="Paste your Copy-summary text here…"></textarea>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="act" id="loadbtn">Load &amp; lock plan</button>
+        <button class="ghost" id="relockbtn">Re-lock from worksheet</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="foot">
+    Targets are locked here on purpose — mid-month is for living the plan, not renegotiating it.
+    Everything on this page stays on this device; logging here also keeps the worksheet's
+    “actual” column (and Dad's status light, if you've turned it on) up to date automatically.
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>(n<0?'−$':'$')+Math.abs(Math.round(n)).toLocaleString('en-US');
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const REC_KEY='vbud:recon:v1', ARC_KEY='vbud:archive:v1', WS_KEY='vbud:data:v1';
+const GROUPS=[['committed','gf','Committed'],['savings','gs','Savings'],['variable','gv','Variable']];
+
+let rec=null;      // {monthKey, monthLabel, income, cats:[{group,name,target}], entries:[{d,cat,amt,note}], lockedAt}
+let arc=[];        // [{monthKey, monthLabel, income, cats:[{group,name,target,actual}], totals, closedAt}]
+
+function monthKeyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabelOf(d){ return d.toLocaleDateString('en-US',{month:'long',year:'numeric'}); }
+function load(){ try{ const r=localStorage.getItem(REC_KEY); if(r) rec=JSON.parse(r); }catch(e){}
+                 try{ const a=localStorage.getItem(ARC_KEY); if(a) arc=JSON.parse(a); }catch(e){} }
+function save(){ try{ localStorage.setItem(REC_KEY, JSON.stringify(rec)); }catch(e){} }
+function saveArc(){ try{ localStorage.setItem(ARC_KEY, JSON.stringify(arc)); }catch(e){} }
+
+let toastT;
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
+
+/* ---------- plan sources ---------- */
+function parseWorksheet(raw){
+  try{
+    const j=JSON.parse(raw);
+    const p=v=>{const n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;};
+    const cats=[];
+    for(const [g] of GROUPS)(Array.isArray(j[g])?j[g]:[]).forEach(r=>{
+      if(String(r.name||'').trim() && p(r.target)>0) cats.push({group:g,name:String(r.name).trim(),target:p(r.target)});
+    });
+    return cats.length?{income:p(j.income),cats}:null;
+  }catch(e){ return null; }
+}
+function parseSummaryText(txt){
+  const inc=txt.match(/Income[^:]*:\s*\$?([\d,]+)/i);
+  if(!inc) return null;
+  const cats=[]; let bucket=null;
+  for(const line of txt.split(/\r?\n/)){
+    const h=line.trim().toUpperCase();
+    if(h==='COMMITTED'){bucket='committed';continue;}
+    if(h==='SAVINGS'){bucket='savings';continue;}
+    if(h==='VARIABLE'){bucket='variable';continue;}
+    const m=line.match(/^\s+(.+?)\s+—\s+target\s+\$?([\d,]+)/);
+    if(m && bucket) cats.push({group:bucket,name:m[1].trim(),target:parseFloat(m[2].replace(/,/g,''))});
+  }
+  return cats.length?{income:parseFloat(inc[1].replace(/,/g,'')),cats}:null;
+}
+function lockPlan(plan,how){
+  const now=new Date();
+  rec={monthKey:monthKeyOf(now), monthLabel:monthLabelOf(now), income:plan.income,
+       cats:plan.cats, entries:(rec&&rec.monthKey===monthKeyOf(now))?rec.entries:[], lockedAt:now.toISOString()};
+  save(); syncWorksheet(); render();
+  toast('Plan locked for '+rec.monthLabel+(how?' — '+how:''));
+}
+function tryAutoLock(){
+  try{
+    const raw=localStorage.getItem(WS_KEY);
+    if(raw){ const p=parseWorksheet(raw); if(p){ lockPlan(p,'read from your worksheet'); return true; } }
+  }catch(e){}
+  return false;
+}
+
+/* ---------- entries & rollup ---------- */
+function catTotals(){
+  const t={};
+  (rec.entries||[]).forEach(e=>{ t[e.cat]=(t[e.cat]||0)+e.amt; });
+  return t;
+}
+function syncWorksheet(){
+  // roll entry totals into the worksheet's "actual" column so the worksheet
+  // and Dad's status light stay truthful; targets and income are never touched
+  try{
+    const raw=localStorage.getItem(WS_KEY);
+    if(!raw) return;
+    const ws=JSON.parse(raw);
+    const totals=catTotals();
+    for(const [g] of GROUPS)(ws[g]||[]).forEach(r=>{
+      const key=String(r.name||'').trim();
+      if(rec.cats.some(c=>c.name===key)) r.actual = totals[key]?String(Math.round(totals[key]*100)/100):'';
+    });
+    localStorage.setItem(WS_KEY, JSON.stringify(ws));
+  }catch(e){}
+}
+
+/* ---------- close-out ---------- */
+function summaryText(m){
+  const lines=['VINCENT & KAYLA — MONTH CLOSED: '+m.monthLabel.toUpperCase(),
+    'Income (after taxes): '+money(m.income),''];
+  for(const [g,,label] of GROUPS){
+    const rows=m.cats.filter(c=>c.group===g);
+    if(!rows.length) continue;
+    lines.push(label.toUpperCase());
+    rows.forEach(c=>lines.push('  '+c.name+' — target '+money(c.target)+' / actual '+money(c.actual||0)));
+    lines.push('');
+  }
+  lines.push('Planned out: '+money(m.totals.planned));
+  lines.push('Actual out: '+money(m.totals.spent));
+  lines.push('Left vs income: '+money(m.income-m.totals.spent));
+  return lines.join('\n');
+}
+function closeMonth(){
+  const totals=catTotals();
+  const planned=rec.cats.reduce((s,c)=>s+c.target,0);
+  const spent=Object.values(totals).reduce((s,v)=>s+v,0);
+  const closed={monthKey:rec.monthKey, monthLabel:rec.monthLabel, income:rec.income,
+    cats:rec.cats.map(c=>({...c, actual:Math.round((totals[c.name]||0)*100)/100})),
+    totals:{planned:Math.round(planned), spent:Math.round(spent)},
+    entryCount:(rec.entries||[]).length, closedAt:new Date().toISOString()};
+  arc=arc.filter(a=>a.monthKey!==closed.monthKey); arc.unshift(closed); saveArc();
+  // clear the worksheet's actuals for the fresh month (targets untouched)
+  try{
+    const raw=localStorage.getItem(WS_KEY);
+    if(raw){ const ws=JSON.parse(raw);
+      for(const [g] of GROUPS)(ws[g]||[]).forEach(r=>{ r.actual=''; });
+      localStorage.setItem(WS_KEY, JSON.stringify(ws)); }
+  }catch(e){}
+  rec.entries=[]; rec=null; try{ localStorage.removeItem(REC_KEY); }catch(e){}
+  if(!tryAutoLock()) render();
+  toast(closed.monthLabel+' closed into your history');
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderHist(); renderFeed();
+  const app=$('#app');
+  if(!rec){
+    app.innerHTML=`<div class="card" style="border-left:4px solid var(--alert)">
+      <b style="font-family:'Archivo',sans-serif;font-weight:700;font-size:16px">No plan locked yet.</b>
+      <p style="font-size:13.5px;margin-top:6px;color:var(--ink-soft)">Fill in targets on the
+      <a href="worksheet.html">worksheet</a> first, then come back — this page locks onto them
+      automatically. On a different device, paste your Copy summary under <b>Plan</b> below.</p></div>`;
+    $('#feedsec').open=true;
+    return;
+  }
+  const now=new Date();
+  const staleMonth = rec.monthKey!==monthKeyOf(now);
+  const totals=catTotals();
+  const planned=rec.cats.reduce((s,c)=>s+c.target,0);
+  const spent=Object.values(totals).reduce((s,v)=>s+v,0);
+  const daysIn=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const dayOf=now.getDate();
+  const elapsed=dayOf/daysIn;
+  const spentPct=planned?spent/planned*100:0;
+  const paceClass=spentPct>100?'over':(spentPct>elapsed*100+8?'hot':'');
+
+  const heroHtml=`
+  <section>
+    <div class="shead"><span class="k month">${staleMonth?'Close me':'This month'}</span><h2>${rec.monthLabel}</h2>
+      <span class="sub">day ${dayOf} of ${daysIn} · plan locked ${new Date(rec.lockedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>
+    <div class="card">
+      ${staleMonth?`<div style="border-left:4px solid var(--alert);background:var(--alert-soft);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13.5px">
+        A new calendar month has started. Close out <b>${rec.monthLabel}</b> below to archive it and
+        start fresh from the worksheet's current targets.</div>`:''}
+      <div class="hero">
+        <div class="hcell"><div class="lab">Planned (locked)</div><div class="big num">${money(planned)}</div></div>
+        <div class="hcell"><div class="lab">Spent so far</div><div class="big num">${money(spent)}</div></div>
+        <div class="hcell"><div class="lab">Left in plan</div><div class="big num ${planned-spent>=0?'v-ok':'v-bad'}">${money(planned-spent)}</div></div>
+      </div>
+      <div class="pacebar"><div class="fill ${paceClass}" style="width:${Math.min(100,spentPct)}%"></div>
+        <div class="tick" style="left:${Math.min(100,elapsed*100)}%"></div></div>
+      <div class="pacenote">The black tick is where the month is (${Math.round(elapsed*100)}% gone);
+        the bar is how much of the plan you've spent (${Math.round(spentPct)}%).
+        ${spentPct<=elapsed*100?'Spending is running behind the calendar — the comfortable side.':
+          spentPct<=100?'Spending is running ahead of the calendar — worth a glance at the categories below.':
+          'The plan is fully spent with month left — the overage is coming out of somewhere; see the red bars.'}</div>
+    </div>
+  </section>`;
+
+  /* quick add */
+  const opts=GROUPS.map(([g,,label])=>{
+    const rows=rec.cats.filter(c=>c.group===g);
+    if(!rows.length) return '';
+    return `<optgroup label="${label}">`+rows.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')+`</optgroup>`;
+  }).join('');
+  const today=now.toISOString().slice(0,10);
+  const qaddHtml=`
+  <section>
+    <div class="shead"><span class="k log">Log it</span><h2>Add spending</h2>
+      <span class="sub">a few seconds, right after it happens</span></div>
+    <div class="card">
+      <div class="qadd">
+        <div><label for="q-cat">Category</label><select id="q-cat">${opts}</select></div>
+        <div><label for="q-amt">Amount ($)</label><input id="q-amt" inputmode="decimal" placeholder="0"></div>
+        <div><label for="q-date">Date</label><input id="q-date" type="date" value="${today}" max="${today}"></div>
+        <div><label for="q-note">Note (optional)</label><input id="q-note" placeholder="e.g. Walmart"></div>
+        <button class="act" id="q-go">Log it</button>
+      </div>
+    </div>
+  </section>`;
+
+  /* category bars */
+  const groupsHtml=GROUPS.map(([g,cls,label])=>{
+    const rows=rec.cats.filter(c=>c.group===g);
+    if(!rows.length) return '';
+    return `<div class="group"><h3 class="${cls}">${label}</h3>`+rows.map(c=>{
+      const a=totals[c.name]||0;
+      const pct=c.target?a/c.target*100:0;
+      const cls2=pct>100?'over':(pct>elapsed*100+15&&g!=='committed'&&g!=='savings'?'warn':'');
+      const left=c.target-a;
+      return `<div class="crow">
+        <div class="cname">${esc(c.name)}</div>
+        <div class="ctrack"><div class="fill ${cls2}" style="width:${Math.min(100,pct)}%"></div>
+          ${g==='variable'?`<div class="tick" style="left:${Math.min(100,elapsed*100)}%"></div>`:''}</div>
+        <div class="cnum"><b class="num ${left<0?'v-bad':''}">${money(a)}</b> / ${money(c.target)}${left<0?' · over '+money(-left):''}</div>
+      </div>`;
+    }).join('')+`</div>`;
+  }).join('');
+  const catHtml=`
+  <section>
+    <div class="shead"><span class="k cat">Runway</span><h2>Category by category</h2>
+      <span class="sub">the faint tick = where the month is</span></div>
+    <div class="card">${groupsHtml}</div>
+  </section>`;
+
+  /* entries */
+  const ents=(rec.entries||[]).slice().reverse().slice(0,30);
+  const entHtml=`
+  <section>
+    <div class="shead"><span class="k log">Ledger</span><h2>Entries</h2>
+      <span class="sub">${(rec.entries||[]).length} logged this month</span></div>
+    <div class="card">${ents.length?ents.map(e=>{
+        const idx=rec.entries.indexOf(e);
+        const d=new Date(e.d+'T00:00:00');
+        return `<div class="entry"><span class="ed">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+          <span class="ec">${esc(e.cat)}${e.note?` <small>· ${esc(e.note)}</small>`:''}</span>
+          <span class="ea num">${money(e.amt)}</span>
+          <button data-del="${idx}" title="Remove">&#10005;</button></div>`;
+      }).join(''):'<span class="hint">Nothing logged yet — the first entry takes ten seconds.</span>'}
+    </div>
+  </section>`;
+
+  /* close out */
+  const closeHtml=`
+  <section>
+    <div class="shead"><span class="k close">Month end</span><h2>Close out ${rec.monthLabel}</h2>
+      <span class="sub">archive it, start the next month clean</span></div>
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">Closing archives this month —
+        targets, actuals, and all ${(rec.entries||[]).length} entries — into <b>Past months</b> below,
+        clears the worksheet's actuals, and re-locks next month's plan from the worksheet's current
+        targets. Do this within a few days of the month turning.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="ghost" id="copy-month">Copy month summary for Dad</button>
+        <button class="danger" id="close-month">Close out this month</button>
+      </div>
+    </div>
+  </section>`;
+
+  const dadHtml=`<div class="card dadnote">
+    <h3>Running hot?</h3>
+    <p>If the bars are going red mid-month, that's exactly when <b>Dad's status light</b> earns its
+      keep — it's already watching the same numbers you're logging here (flip it on at the bottom of
+      the <a href="worksheet.html">worksheet</a> if you haven't). A tight month is information, not failure.</p></div>`;
+
+  app.innerHTML=heroHtml+qaddHtml+catHtml+entHtml+closeHtml+dadHtml;
+
+  $('#q-go').addEventListener('click',()=>{
+    const cat=$('#q-cat').value, amt=parseFloat($('#q-amt').value), d=$('#q-date').value, note=$('#q-note').value.trim();
+    if(!cat||!(amt>0)){ toast('Pick a category and an amount'); return; }
+    rec.entries.push({d:d||today, cat, amt:Math.round(amt*100)/100, note});
+    save(); syncWorksheet(); render();
+    toast(money(amt)+' logged to '+cat);
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    rec.entries.splice(parseInt(b.dataset.del,10),1);
+    save(); syncWorksheet(); render(); toast('Entry removed');
+  }));
+  $('#copy-month').addEventListener('click',async()=>{
+    const totals=catTotals();
+    const m={monthKey:rec.monthKey,monthLabel:rec.monthLabel,income:rec.income,
+      cats:rec.cats.map(c=>({...c,actual:totals[c.name]||0})),
+      totals:{planned:Math.round(planned),spent:Math.round(spent)}};
+    const txt=summaryText(m);
+    try{ await navigator.clipboard.writeText(txt); toast('Month summary copied — paste it to Dad'); }
+    catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); toast('Month summary copied — paste it to Dad'); }catch(_){ toast('Couldn’t copy'); }
+      document.body.removeChild(ta); }
+  });
+  $('#close-month').addEventListener('click',()=>{
+    if(confirm('Close out '+rec.monthLabel+'? It gets archived to Past months and the new month starts from the worksheet’s current targets.')) closeMonth();
+  });
+}
+
+function renderHist(){
+  const hb=$('#histbody');
+  if(!arc.length){ hb.innerHTML='<span class="hint">No closed months yet — your history builds here, one close-out at a time.</span>'; return; }
+  hb.innerHTML=arc.map((m,i)=>{
+    const ok=m.totals.spent<=m.totals.planned;
+    return `<div class="hmonth"><div class="hh">
+      <b>${esc(m.monthLabel)}</b>
+      <span class="num">planned ${money(m.totals.planned)} · spent ${money(m.totals.spent)} · ${m.entryCount||0} entries</span>
+      <span class="pill ${ok?'good':'miss'}">${ok?'under plan':'over by '+money(m.totals.spent-m.totals.planned)}</span></div>
+      <div style="margin-top:8px"><button class="ghost" data-copyhist="${i}" style="padding:6px 12px;font-size:12px">Copy this month</button></div>
+    </div>`;
+  }).join('')+`<div style="margin-top:8px"><button class="ghost" id="dl-hist" style="padding:6px 12px;font-size:12px">Download full history (file)</button></div>`;
+  document.querySelectorAll('[data-copyhist]').forEach(b=>b.addEventListener('click',async()=>{
+    const m=arc[parseInt(b.dataset.copyhist,10)];
+    try{ await navigator.clipboard.writeText(summaryText(m)); toast(m.monthLabel+' copied'); }catch(e){ toast('Couldn’t copy'); }
+  }));
+  const dl=$('#dl-hist');
+  if(dl) dl.addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(arc,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='vincent-kayla-budget-history.json'; a.click(); URL.revokeObjectURL(a.href);
+    toast('History downloaded — keep that file safe');
+  });
+}
+
+function renderFeed(){
+  const st=$('#srcstate');
+  if(rec){
+    st.className='srcstate ok';
+    st.textContent='Plan locked for '+rec.monthLabel+' — income '+money(rec.income)+'/mo, '+rec.cats.length+' categories. Targets can’t drift mid-month.';
+  } else { st.className='srcstate none'; st.textContent='No plan loaded yet.'; }
+}
+
+/* ---------- wiring ---------- */
+$('#loadbtn').addEventListener('click',()=>{
+  const txt=$('#pastebox').value.trim();
+  if(!txt){ toast('Paste the worksheet summary first'); return; }
+  const p=parseSummaryText(txt)||parseWorksheet(txt);
+  if(!p){ toast('Couldn’t read that — paste the Copy-summary text exactly'); return; }
+  lockPlan(p,'from your paste'); $('#feedsec').open=false;
+});
+$('#relockbtn').addEventListener('click',()=>{
+  if(rec && (rec.entries||[]).length && !confirm('Re-locking replaces this month’s targets with the worksheet’s current ones. Your logged entries stay. Continue?')) return;
+  if(!tryAutoLock()) toast('No worksheet budget found on this device');
+});
+
+/* ---------- init ---------- */
+load();
+if(rec){ render(); }
+else if(!tryAutoLock()){ render(); }
+</script>
+</body>
+</html>

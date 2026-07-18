@@ -71,16 +71,25 @@ getpantry.cloud lets Lance inspect or wipe the basket by entering the PantryID.
 - **Caveat:** the slot's URL is visible in this public repo, so treat the status as
   semi-public — which is why it carries percentages and nothing else.
 
-## Adding the reconciliation tool later
+## The reconciliation tool (`reconcile.html`)
 
-The landing page already has a "Coming soon — Your Reconciliation Tool" card. When the tool
-exists:
+Live since July 2026, triggered by Vincent & Kayla sending back their completed worksheet.
+The month-to-month companion to the worksheet:
 
-1. Drop it in as `reconcile.html` (keep it self-contained like the other pages).
-2. In `index.html`, convert the coming-soon `<div class="tool soon">` into a link:
-   `<a class="tool" href="reconcile.html">`, change its tag class from `soon` to `wks`,
-   and update the copy.
-3. Push.
+- **Locks the plan** from the worksheet's targets at month start (same-origin auto-read;
+  paste Copy-summary on another device). Targets can't drift mid-month — changing the plan
+  means changing the worksheet, then re-locking next month.
+- **Entry logging**: category / amount / date / note, a few seconds per expense. Entries
+  roll up per category and **write back into the worksheet's "actual" column**, so the
+  worksheet — and Dad's status light — stay truthful automatically.
+- **Runway bars** per category with a calendar tick (day-of-month pace), plus a month-level
+  pace bar.
+- **Close-out**: archives the month (targets, actuals, entry count) to `vbud:archive:v1`,
+  clears the worksheet's actuals, and re-locks the new month from current targets. History
+  lives under "Past months" with per-month copy and a **Download full history** JSON file
+  (the durable record — browser storage dies with cleared browser data).
+- **No personal figures in this repo**: the page is generic code; their numbers live only
+  in their browser, same as everything else on the site.
 
 ## One caution
 
